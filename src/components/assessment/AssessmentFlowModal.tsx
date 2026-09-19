@@ -37,12 +37,22 @@ interface AssessmentFlowModalProps {
   initialBill?: number;
 }
 
+import { AlertCircle } from "lucide-react";
+
+export type GeocodeStatus = "IDLE" | "LOADING" | "SUCCESS" | "NO_RESULT" | "ERROR";
+
+export interface GeocodedLocation {
+  displayName: string;
+  latitude: number;
+  longitude: number;
+}
+
 type FlowStep = "INPUT" | "ANALYZING" | "RESULTS";
 
 export function AssessmentFlowModal({
   isOpen,
   onClose,
-  initialAddress = "1248 Solar Way, Palo Alto, CA",
+  initialAddress = "Palo Alto, California",
   initialBill = 240,
 }: AssessmentFlowModalProps) {
   const [step, setStep] = React.useState<FlowStep>("INPUT");
@@ -50,6 +60,11 @@ export function AssessmentFlowModal({
   const [monthlyBill, setMonthlyBill] = React.useState(initialBill);
   const [selectedScenario, setSelectedScenario] = React.useState<ScenarioType>("GOOD");
   
+  // Geocoding State
+  const [geocodeStatus, setGeocodeStatus] = React.useState<GeocodeStatus>("IDLE");
+  const [geocodeError, setGeocodeError] = React.useState<string | null>(null);
+  const [resolvedLocation, setResolvedLocation] = React.useState<GeocodedLocation | null>(null);
+
   // Analysis progress
   const [currentAnalysisIndex, setCurrentAnalysisIndex] = React.useState(0);
   const [progressPercent, setProgressPercent] = React.useState(0);
@@ -59,6 +74,8 @@ export function AssessmentFlowModal({
     if (isOpen) {
       setAddress(initialAddress);
       setMonthlyBill(initialBill);
+      setGeocodeStatus("IDLE");
+      setGeocodeError(null);
     }
   }, [isOpen, initialAddress, initialBill]);
 
@@ -67,14 +84,57 @@ export function AssessmentFlowModal({
     setSelectedScenario(scen);
     setAddress(DEMO_SCENARIOS[scen].address);
     setMonthlyBill(DEMO_SCENARIOS[scen].monthlyBill);
+    setGeocodeStatus("IDLE");
+    setGeocodeError(null);
   };
 
-  // Start analysis flow
-  const handleStartAnalysis = (e?: React.FormEvent) => {
+  // Start analysis flow with server-side geocoding lookup
+  const handleStartAnalysis = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    setStep("ANALYZING");
-    setCurrentAnalysisIndex(0);
-    setProgressPercent(0);
+    if (!address || !address.trim()) {
+      setGeocodeStatus("ERROR");
+      setGeocodeError("Please enter a valid property address or location name.");
+      return;
+    }
+
+    setGeocodeStatus("LOADING");
+    setGeocodeError(null);
+
+    try {
+      const res = await fetch("/api/geocode", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ address: address.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        if (res.status === 404 || data.error?.includes("No geocoding match")) {
+          setGeocodeStatus("NO_RESULT");
+        } else {
+          setGeocodeStatus("ERROR");
+        }
+        setGeocodeError(data.error || "Could not resolve geographic location for this address.");
+        return;
+      }
+
+      setGeocodeStatus("SUCCESS");
+      setResolvedLocation({
+        displayName: data.displayName,
+        latitude: data.latitude,
+        longitude: data.longitude,
+      });
+
+      // Proceed to step 2 (ANALYZING)
+      setStep("ANALYZING");
+      setCurrentAnalysisIndex(0);
+      setProgressPercent(0);
+    } catch (err: any) {
+      console.warn("Geocoding API call error:", err);
+      setGeocodeStatus("ERROR");
+      setGeocodeError("Network connection issue while resolving address coordinates. Please try again.");
+    }
   };
 
   // Run progress timer during ANALYZING step
@@ -240,6 +300,19 @@ export function AssessmentFlowModal({
                 </div>
               </div>
 
+              {/* Geocoding Error Alert */}
+              {(geocodeStatus === "NO_RESULT" || geocodeStatus === "ERROR") && geocodeError && (
+                <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-900 text-xs font-sans flex items-start gap-2.5 animate-fade-in">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold block mb-0.5 font-mono uppercase text-[10px] text-red-800">
+                      Location Geocoding Notice
+                    </span>
+                    <span>{geocodeError}</span>
+                  </div>
+                </div>
+              )}
+
               {/* Form Input */}
               <form onSubmit={handleStartAnalysis} className="space-y-6">
                 <div>
@@ -287,10 +360,20 @@ export function AssessmentFlowModal({
                 <Button
                   type="submit"
                   size="lg"
+                  disabled={geocodeStatus === "LOADING"}
                   className="w-full bg-graphite-950 hover:bg-graphite-900 text-white font-semibold py-4 rounded-lg flex items-center justify-center gap-2 shadow-md transition-all text-sm"
                 >
-                  <span>Analyse My Roof</span>
-                  <ArrowRight className="w-4 h-4 text-solar-400" />
+                  {geocodeStatus === "LOADING" ? (
+                    <>
+                      <RefreshCw className="w-4 h-4 animate-spin text-solar-400" />
+                      <span>Resolving Location Coordinates...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Analyse My Roof</span>
+                      <ArrowRight className="w-4 h-4 text-solar-400" />
+                    </>
+                  )}
                 </Button>
               </form>
 
@@ -312,8 +395,13 @@ export function AssessmentFlowModal({
                   </div>
                   
                   <h2 className="text-2xl font-bold font-sans text-graphite-950 mb-1">
-                    Analysing {address}
+                    Analysing {resolvedLocation?.displayName ? resolvedLocation.displayName.split(",")[0] : address}
                   </h2>
+                  {resolvedLocation && (
+                    <p className="text-xs font-mono text-cyan-600 font-semibold mb-2">
+                      Coordinates: {resolvedLocation.latitude.toFixed(4)}° N, {resolvedLocation.longitude.toFixed(4)}° W
+                    </p>
+                  )}
                   <p className="text-xs font-mono text-graphite-500 mb-8">
                     Calculating structural geometry & hourly solar irradiance...
                   </p>
@@ -396,7 +484,12 @@ export function AssessmentFlowModal({
              ======================================================== */}
           {step === "RESULTS" && (
             <div className="relative">
-              <ResultsView onBackToInput={() => setStep("INPUT")} />
+              <ResultsView
+                onBackToInput={() => setStep("INPUT")}
+                address={address}
+                geocodedLocation={resolvedLocation}
+                geocodeStatus={geocodeStatus}
+              />
 
               {/* Bottom Sticky Action Bar */}
               <div className="p-6 bg-white hairline-t flex flex-col sm:flex-row items-center justify-between gap-4 sticky bottom-0 z-30">

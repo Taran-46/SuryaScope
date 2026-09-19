@@ -11,15 +11,15 @@ interface PreFeasibilityDemoProps {
 }
 
 export function PreFeasibilityDemo({ isOpen, onClose, onOpenAnalysis }: PreFeasibilityDemoProps) {
-  const [address, setAddress] = React.useState("1248 Solar Way, Palo Alto, CA");
+  const [address, setAddress] = React.useState("Palo Alto, California");
   const [monthlyBill, setMonthlyBill] = React.useState(220);
   const [calculating, setCalculating] = React.useState(false);
   const [hasResult, setHasResult] = React.useState(true);
 
   const presets = [
-    { label: "Suburban Villa", address: "1248 Solar Way, Palo Alto, CA", bill: 220, capacity: "5.2 kW", payback: "3.9 yrs", score: "96/100" },
-    { label: "Urban Single House", address: "420 Clean Energy Dr, Austin, TX", bill: 180, capacity: "4.2 kW", payback: "4.1 yrs", score: "92/100" },
-    { label: "Coastal Residence", address: "788 Sunshine Ave, Miami, FL", bill: 310, capacity: "7.8 kW", payback: "3.4 yrs", score: "98/100" },
+    { label: "Suburban Villa", address: "Palo Alto, California", bill: 220, capacity: "5.2 kW", payback: "3.9 yrs", score: "96/100" },
+    { label: "Urban Single House", address: "Austin, Texas", bill: 180, capacity: "4.2 kW", payback: "4.1 yrs", score: "92/100" },
+    { label: "Coastal Residence", address: "Miami, Florida", bill: 310, capacity: "7.8 kW", payback: "3.4 yrs", score: "98/100" },
   ];
 
   const handleRunAnalysis = (e?: React.FormEvent) => {

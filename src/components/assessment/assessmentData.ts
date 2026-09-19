@@ -22,7 +22,7 @@ export interface AssessmentResult {
 export const DEMO_SCENARIOS: Record<ScenarioType, AssessmentResult> = {
   GOOD: {
     scenario: "GOOD",
-    address: "1248 Solar Way, Palo Alto, CA",
+    address: "Palo Alto, California",
     monthlyBill: 240,
     suitabilityScore: 96,
     suitabilityLabel: "Highly Suitable",
@@ -40,7 +40,7 @@ export const DEMO_SCENARIOS: Record<ScenarioType, AssessmentResult> = {
   },
   MODERATE: {
     scenario: "MODERATE",
-    address: "420 Clean Energy Dr, Austin, TX",
+    address: "Austin, Texas",
     monthlyBill: 175,
     suitabilityScore: 74,
     suitabilityLabel: "Moderately Suitable",
@@ -58,7 +58,7 @@ export const DEMO_SCENARIOS: Record<ScenarioType, AssessmentResult> = {
   },
   POOR: {
     scenario: "POOR",
-    address: "89 Shadow Oak Lane, Portland, OR",
+    address: "Portland, Oregon",
     monthlyBill: 130,
     suitabilityScore: 48,
     suitabilityLabel: "Sub-Optimal",

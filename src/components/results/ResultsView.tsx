@@ -36,11 +36,25 @@ const RoofScene = dynamic(
   }
 );
 
-interface ResultsViewProps {
-  onBackToInput?: () => void;
+export interface GeocodedLocation {
+  displayName: string;
+  latitude: number;
+  longitude: number;
 }
 
-export function ResultsView({ onBackToInput }: ResultsViewProps) {
+interface ResultsViewProps {
+  onBackToInput?: () => void;
+  address?: string;
+  geocodedLocation?: GeocodedLocation | null;
+  geocodeStatus?: "IDLE" | "LOADING" | "SUCCESS" | "NO_RESULT" | "ERROR";
+}
+
+export function ResultsView({
+  onBackToInput,
+  address = "1248 Solar Way, Palo Alto, CA",
+  geocodedLocation,
+  geocodeStatus = "IDLE",
+}: ResultsViewProps) {
   const [selectedSegmentId, setSelectedSegmentId] = React.useState<string>("south-east");
 
   const activeSegment = ROOF_SEGMENTS.find((s) => s.id === selectedSegmentId) || ROOF_SEGMENTS[0];
@@ -83,12 +97,16 @@ export function ResultsView({ onBackToInput }: ResultsViewProps) {
           {/* Header Row */}
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 hairline-b">
             <div>
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-mono uppercase tracking-widest text-graphite-500">
-                  GEOSPATIAL AUDIT #8492-B
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
+                <span className="text-xs font-mono uppercase tracking-widest text-cyan-700 font-semibold">
+                  {geocodedLocation
+                    ? `COORDINATES: ${geocodedLocation.latitude.toFixed(4)}° N, ${geocodedLocation.longitude.toFixed(4)}° W`
+                    : "GEOSPATIAL AUDIT #8492-B"}
                 </span>
                 <span className="text-graphite-300">•</span>
-                <span className="text-xs font-mono text-graphite-500">1248 Solar Way, Palo Alto, CA</span>
+                <span className="text-xs font-mono text-graphite-600 line-clamp-1 max-w-xl">
+                  {geocodedLocation?.displayName || address}
+                </span>
               </div>
 
               <h1 className="text-3xl sm:text-4xl font-bold font-sans tracking-tight text-graphite-950">
@@ -401,7 +419,7 @@ export function ResultsView({ onBackToInput }: ResultsViewProps) {
          ======================================================== */}
       <AiRoofAssessmentSection
         payload={{
-          address: "1248 Solar Way, Palo Alto, CA",
+          address: geocodedLocation?.displayName || address,
           suitabilityScore: 96,
           suitabilityLabel: "Highly Suitable",
           roofAreaSqM: 84.5,
