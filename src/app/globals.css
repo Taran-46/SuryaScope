@@ -1,26 +1,109 @@
 @import "tailwindcss";
 
+@theme {
+  --color-solar-50: #fffdf0;
+  --color-solar-100: #fffae0;
+  --color-solar-200: #fff2b3;
+  --color-solar-300: #ffe380;
+  --color-solar-400: #ffd14d;
+  --color-solar-500: #e6a100;
+  --color-solar-600: #d48e00;
+  --color-solar-700: #b37300;
+  --color-solar-800: #8c5800;
+  --color-solar-900: #663e00;
+
+  --color-graphite-50: #fafaf9;
+  --color-graphite-100: #f4f4f2;
+  --color-graphite-200: #e5e5e0;
+  --color-graphite-300: #d4d4ce;
+  --color-graphite-400: #a3a39c;
+  --color-graphite-500: #73736c;
+  --color-graphite-600: #52524c;
+  --color-graphite-700: #40403b;
+  --color-graphite-800: #262622;
+  --color-graphite-900: #171715;
+  --color-graphite-950: #0d0d0b;
+
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+  --color-emerald-700: #047857;
+
+  --color-border: #e5e5e0;
+  --color-border-strong: #d4d4ce;
+  --color-background: #fafaf9;
+  --color-foreground: #171715;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --font-sans: var(--font-inter, system-ui, -apple-system, sans-serif);
+  --font-mono: var(--font-jetbrains-mono, monospace);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+html {
+  scroll-behavior: smooth;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+/* Subtle architectural background grid patterns */
+.bg-grid-pattern {
+  background-size: 32px 32px;
+  background-image: 
+    linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.bg-dot-pattern {
+  background-size: 24px 24px;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.06) 1px, transparent 1px);
+}
+
+/* Precision hairline borders */
+.hairline-b {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.hairline-t {
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.hairline-box {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+/* Smooth custom glass cards */
+.architectural-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.03), 0 1px 2px -1px rgba(0, 0, 0, 0.02);
+}
+
+.architectural-card-hover {
+  transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.architectural-card-hover:hover {
+  transform: translateY(-2px);
+  border-color: rgba(230, 161, 0, 0.3);
+  box-shadow: 0 12px 32px -4px rgba(0, 0, 0, 0.06), 0 0 0 1px rgba(230, 161, 0, 0.15);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4ce;
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a3a39c;
 }
