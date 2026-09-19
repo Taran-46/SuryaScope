@@ -18,6 +18,8 @@ import {
   KeyRound
 } from "lucide-react";
 
+import { setCurrentUser, UserSession } from "@/lib/storage/savedAssessments";
+
 export default function LoginPage() {
   const router = useRouter();
   const [role, setRole] = React.useState<"homeowner" | "installer">("homeowner");
@@ -33,6 +35,13 @@ export default function LoginPage() {
     setSuccessMsg("");
 
     setTimeout(() => {
+      const user: UserSession = {
+        email: email || (role === "homeowner" ? "homeowner@suryascope.com" : "installer@suryascope.com"),
+        role,
+        name: email ? email.split("@")[0] : (role === "homeowner" ? "Homeowner" : "Installer"),
+      };
+      setCurrentUser(user);
+
       setLoading(false);
       setSuccessMsg(
         mode === "signin"
@@ -41,24 +50,32 @@ export default function LoginPage() {
       );
       setTimeout(() => {
         router.push("/");
-      }, 1200);
-    }, 800);
+      }, 1000);
+    }, 600);
   };
 
   const handleDemoSignIn = (demoRole: "homeowner" | "installer") => {
+    const demoEmail = demoRole === "homeowner" ? "sarah.homeowner@suryascope.com" : "contact@apexsolar.in";
     setRole(demoRole);
-    setEmail(demoRole === "homeowner" ? "sarah.homeowner@suryascope.com" : "contact@apexsolar.in");
+    setEmail(demoEmail);
     setPassword("••••••••••••");
     setLoading(true);
     setSuccessMsg("");
 
     setTimeout(() => {
+      const user: UserSession = {
+        email: demoEmail,
+        role: demoRole,
+        name: demoRole === "homeowner" ? "Sarah Jenkins" : "Apex Solar Systems",
+      };
+      setCurrentUser(user);
+
       setLoading(false);
       setSuccessMsg(`Authenticated as ${demoRole === "homeowner" ? "Sarah Jenkins (Homeowner)" : "Apex Solar Systems (Verified Installer)"}`);
       setTimeout(() => {
         router.push("/");
-      }, 1000);
-    }, 600);
+      }, 800);
+    }, 500);
   };
 
   return (

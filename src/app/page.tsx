@@ -14,10 +14,14 @@ import { AssessmentFlowModal } from "@/components/assessment/AssessmentFlowModal
 export default function Home() {
   const [assessmentModalOpen, setAssessmentModalOpen] = React.useState(false);
   const [initialAddress, setInitialAddress] = React.useState("1248 Solar Way, Palo Alto, CA");
+  const [initialBill, setInitialBill] = React.useState<number>(240);
 
-  const handleOpenAssessment = (addressPreset?: string) => {
+  const handleOpenAssessment = (addressPreset?: string, billPreset?: number) => {
     if (addressPreset) {
       setInitialAddress(addressPreset);
+    }
+    if (billPreset) {
+      setInitialBill(billPreset);
     }
     setAssessmentModalOpen(true);
   };
@@ -41,7 +45,9 @@ export default function Home() {
         {/* Financial Pre-Feasibility & ROI Section: WILL SOLAR PAY OFF? (id="economics") */}
         <div id="economics" className="bg-white hairline-t hairline-b py-16">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
-            <SolarEconomicsSection systemSizeKw={4.8} />
+            <SolarEconomicsSection
+              onOpenAnalysis={(bill) => handleOpenAssessment(undefined, bill)}
+            />
           </div>
         </div>
 
@@ -60,6 +66,7 @@ export default function Home() {
         isOpen={assessmentModalOpen}
         onClose={() => setAssessmentModalOpen(false)}
         initialAddress={initialAddress}
+        initialBill={initialBill}
       />
     </div>
   );

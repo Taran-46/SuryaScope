@@ -4,7 +4,18 @@ import * as React from "react";
 import Link from "next/link";
 import { SuryascopeLogo } from "@/components/brand/SuryascopeLogo";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Compass, ShieldCheck, Sun, Layers, LogIn, Bookmark } from "lucide-react";
+import {
+  ArrowRight,
+  Compass,
+  ShieldCheck,
+  Sun,
+  Layers,
+  LogIn,
+  LogOut,
+  User,
+  Bookmark
+} from "lucide-react";
+import { getCurrentUser, setCurrentUser, UserSession } from "@/lib/storage/savedAssessments";
 
 interface NavbarProps {
   onOpenAnalysis?: () => void;
@@ -12,14 +23,31 @@ interface NavbarProps {
 
 export function Navbar({ onOpenAnalysis }: NavbarProps) {
   const [scrolled, setScrolled] = React.useState(false);
+  const [currentUser, setCurrentUserState] = React.useState<UserSession | null>(null);
+
+  const checkUser = React.useCallback(() => {
+    setCurrentUserState(getCurrentUser());
+  }, []);
 
   React.useEffect(() => {
+    checkUser();
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    window.addEventListener("suryascope_saved_updated", checkUser);
+    window.addEventListener("storage", checkUser);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("suryascope_saved_updated", checkUser);
+      window.removeEventListener("storage", checkUser);
+    };
+  }, [checkUser]);
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setCurrentUserState(null);
+  };
 
   return (
     <header
@@ -70,7 +98,7 @@ export function Navbar({ onOpenAnalysis }: NavbarProps) {
           </a>
         </nav>
 
-        {/* CTA & Login Buttons */}
+        {/* CTA & Login/Logout Buttons */}
         <div className="flex items-center gap-3">
           <Button
             onClick={onOpenAnalysis}
@@ -81,16 +109,38 @@ export function Navbar({ onOpenAnalysis }: NavbarProps) {
             <ArrowRight className="w-3.5 h-3.5 text-solar-400" />
           </Button>
 
-          <Link href="/login">
-            <Button
-              variant="outline"
-              size="sm"
-              className="border-graphite-300 hover:bg-graphite-100 text-graphite-900 rounded-md px-3 py-2 text-xs font-medium tracking-wide font-sans flex items-center gap-1.5 transition-all"
-            >
-              <LogIn className="w-3.5 h-3.5 text-graphite-600" />
-              <span>Sign In</span>
-            </Button>
-          </Link>
+          {currentUser ? (
+            <div className="flex items-center gap-2">
+              <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-graphite-100 border border-graphite-200 text-xs font-mono text-graphite-800">
+                <User className="w-3.5 h-3.5 text-solar-600" />
+                <span className="max-w-[120px] truncate font-semibold">
+                  {currentUser.name || currentUser.email.split("@")[0]}
+                </span>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleLogout}
+                className="border-graphite-300 hover:border-red-300 hover:bg-red-50 hover:text-red-700 text-graphite-700 rounded-md px-3 py-2 text-xs font-medium font-sans flex items-center gap-1.5 transition-all shadow-2xs group"
+                title="Log out of session"
+              >
+                <LogOut className="w-3.5 h-3.5 text-graphite-500 group-hover:text-red-600" />
+                <span>Log out</span>
+              </Button>
+            </div>
+          ) : (
+            <Link href="/login">
+              <Button
+                variant="outline"
+                size="sm"
+                className="border-graphite-300 hover:bg-graphite-100 text-graphite-900 rounded-md px-3 py-2 text-xs font-medium tracking-wide font-sans flex items-center gap-1.5 transition-all"
+              >
+                <LogIn className="w-3.5 h-3.5 text-graphite-600" />
+                <span>Sign In</span>
+              </Button>
+            </Link>
+          )}
         </div>
       </div>
     </header>

@@ -7,6 +7,7 @@ import {
   calculateSolarEconomics,
   SolarCalculationResult
 } from "./solarCalculator";
+import { Button } from "@/components/ui/button";
 import {
   TrendingUp,
   DollarSign,
@@ -23,7 +24,9 @@ import {
   ChevronUp,
   SlidersHorizontal,
   HelpCircle,
-  Check
+  Check,
+  Compass,
+  ArrowRight
 } from "lucide-react";
 
 export interface SolarResourceData {
@@ -39,30 +42,64 @@ export interface SolarResourceData {
 interface SolarEconomicsSectionProps {
   systemSizeKw?: number;
   solarResourceData?: SolarResourceData | null;
+  onOpenAnalysis?: (bill?: number, spaceSqM?: number) => void;
 }
 
 export function SolarEconomicsSection({
-  systemSizeKw = 4.8,
+  systemSizeKw: propSystemSizeKw,
   solarResourceData,
+  onOpenAnalysis,
 }: SolarEconomicsSectionProps) {
   const [animatedProgress, setAnimatedProgress] = React.useState(0);
   const [showAssumptionsDrawer, setShowAssumptionsDrawer] = React.useState(false);
 
+  // User requirement inputs
+  const [monthlyBill, setMonthlyBill] = React.useState(3500);
+  const [roofSpaceSqM, setRoofSpaceSqM] = React.useState(60);
+  const [currency, setCurrency] = React.useState<"INR" | "USD">("INR");
+
+  // Specific yield & tariff
+  const specificYield = solarResourceData?.specificYieldKwhPerKw || 1400;
+  const tariff = currency === "INR" ? 6.5 : 0.16;
+
+  // Space limit: each 540W panel takes ~2.2 m² net, ~2.8 m² with walkways/setbacks
+  const maxPanelsPossible = Math.max(2, Math.floor(roofSpaceSqM / 2.8));
+  const maxCapacityFromSpaceKw = Number(((maxPanelsPossible * 540) / 1000).toFixed(1));
+
+  // Bill need: monthly electricity bill translated to annual kWh and required capacity
+  const annualBill = monthlyBill * 12;
+  const annualKwhNeeded = annualBill / tariff;
+  const idealCapacityFromBillKw = Number((annualKwhNeeded / specificYield).toFixed(1));
+
+  // Recommended system capacity bounded by space and bill need
+  const isSpaceConstrained = idealCapacityFromBillKw > maxCapacityFromSpaceKw;
+  const derivedSystemSizeKw = propSystemSizeKw || (isSpaceConstrained
+    ? maxCapacityFromSpaceKw
+    : Math.max(1.0, idealCapacityFromBillKw));
+
   // Calculate economics using transparent calculation engine
   const economics: SolarCalculationResult = React.useMemo(() => {
-    const specificYield = solarResourceData?.specificYieldKwhPerKw || 1400;
     return calculateSolarEconomics({
-      systemSizeKw,
-      costPerKw: 41666, // ₹2,00,000 / 4.8 kW
-      subsidyAmount: 78000, // PM Surya Ghar subsidy
+      systemSizeKw: derivedSystemSizeKw,
+      monthlyBill,
+      usableRoofAreaSqM: roofSpaceSqM,
+      costPerKw: currency === "INR" ? 41666 : 1400,
       annualGenerationPerKw: specificYield,
-      electricityTariffPerKwh: 6.5,
+      electricityTariffPerKwh: tariff,
       analysisYears: 10,
+      currency,
       solarResourceGhi: solarResourceData?.annualSolarResource,
       isEstimate: solarResourceData?.isEstimate ?? true,
       solarSource: solarResourceData?.source || "Regional Climatological Fallback",
     });
-  }, [systemSizeKw, solarResourceData]);
+  }, [derivedSystemSizeKw, monthlyBill, roofSpaceSqM, currency, specificYield, tariff, solarResourceData]);
+
+  const formatMoney = (val: number) => {
+    if (currency === "USD") {
+      return `$${Math.round(val).toLocaleString()}`;
+    }
+    return formatINR(val);
+  };
 
   // Trigger chart entrance animation
   React.useEffect(() => {
@@ -79,8 +116,8 @@ export function SolarEconomicsSection({
   const paddingY = 30;
 
   const minCash = -economics.netInvestmentCost * 1.1; // e.g. -135,000
-  const maxCash = economics.annualSavingsInr * 10 * 1.1; // e.g. +480,000
-  const cashRange = maxCash - minCash;
+  const maxCash = Math.max(economics.netInvestmentCost * 1.5, economics.annualSavingsInr * 10 * 1.1);
+  const cashRange = Math.max(1, maxCash - minCash);
 
   const points = economics.cumulativeCashflow.map((pt, i) => {
     const x = paddingX + (i / 10) * (chartWidth - 2 * paddingX);
@@ -96,8 +133,8 @@ export function SolarEconomicsSection({
   // Find zero crossing Y coordinate
   const zeroY = chartHeight - paddingY - ((0 - minCash) / cashRange) * (chartHeight - 2 * paddingY);
 
-  // Break-even point (approx year 4.2)
-  const breakEvenX = paddingX + (economics.paybackYears / 10) * (chartWidth - 2 * paddingX);
+  // Break-even point (bounded between 0 and 10)
+  const breakEvenX = paddingX + (Math.min(10, Math.max(0, economics.paybackYears)) / 10) * (chartWidth - 2 * paddingX);
 
   return (
     <section className="space-y-8 pt-6">
@@ -132,6 +169,205 @@ export function SolarEconomicsSection({
         </div>
       </div>
 
+      {/* Interactive Requirement Customizer: Electricity Bill & Roof Space */}
+      <div className="architectural-card rounded-2xl p-6 sm:p-8 border border-graphite-200 bg-white shadow-md">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 hairline-b mb-6">
+          <div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-solar-100 border border-solar-300 text-solar-900 text-xs font-mono font-bold uppercase tracking-wider mb-2">
+              <SlidersHorizontal className="w-3.5 h-3.5 text-solar-600" />
+              <span>CUSTOMIZE REQUIREMENTS</span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold font-sans text-graphite-950 tracking-tight">
+              Calculate Payoff For Your Home
+            </h3>
+            <p className="text-xs sm:text-sm text-graphite-600 font-sans mt-0.5">
+              Adjust your monthly electricity bill and available rooftop space to see how fast solar pays for itself.
+            </p>
+          </div>
+
+          {/* Currency Toggle */}
+          <div className="flex items-center gap-1 p-1 bg-graphite-100 rounded-lg border border-graphite-200 text-xs font-mono self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => {
+                setCurrency("INR");
+                if (currency === "USD") setMonthlyBill(3500);
+              }}
+              className={`px-3 py-1 rounded font-bold transition-all ${
+                currency === "INR"
+                  ? "bg-white text-graphite-950 shadow-xs border border-graphite-200"
+                  : "text-graphite-500 hover:text-graphite-900"
+              }`}
+            >
+              ₹ INR
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setCurrency("USD");
+                if (currency === "INR") setMonthlyBill(220);
+              }}
+              className={`px-3 py-1 rounded font-bold transition-all ${
+                currency === "USD"
+                  ? "bg-white text-graphite-950 shadow-xs border border-graphite-200"
+                  : "text-graphite-500 hover:text-graphite-900"
+              }`}
+            >
+              $ USD
+            </button>
+          </div>
+        </div>
+
+        {/* 2 Interactive Sliders Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-6">
+          
+          {/* Slider 1: Monthly Electricity Bill */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-mono uppercase tracking-wider text-graphite-700 font-bold flex items-center gap-1.5">
+                <Zap className="w-4 h-4 text-solar-500" />
+                <span>Monthly Electricity Bill</span>
+              </label>
+              <div className="flex items-center gap-1 text-sm font-bold font-mono text-graphite-950 bg-graphite-50 px-3 py-1 rounded-lg border border-graphite-200">
+                <span>{currency === "INR" ? "₹" : "$"}</span>
+                <input
+                  type="number"
+                  min={currency === "INR" ? 500 : 20}
+                  max={currency === "INR" ? 50000 : 2000}
+                  step={currency === "INR" ? 250 : 10}
+                  value={monthlyBill}
+                  onChange={(e) => setMonthlyBill(Math.max(0, Number(e.target.value)))}
+                  className="w-20 bg-transparent text-right outline-none font-mono"
+                />
+                <span className="text-graphite-400 text-xs font-normal">/mo</span>
+              </div>
+            </div>
+
+            <input
+              type="range"
+              min={currency === "INR" ? 800 : 40}
+              max={currency === "INR" ? 25000 : 1000}
+              step={currency === "INR" ? 250 : 10}
+              value={monthlyBill}
+              onChange={(e) => setMonthlyBill(Number(e.target.value))}
+              className="w-full accent-solar-500 cursor-pointer h-2 bg-graphite-200 rounded-lg"
+            />
+
+            {/* Quick Preset Buttons */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-mono text-graphite-500">
+              <span className="text-[10px] text-graphite-400 uppercase">Presets:</span>
+              {(currency === "INR"
+                ? [1500, 3500, 6500, 12000]
+                : [80, 180, 320, 600]
+              ).map((preset) => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setMonthlyBill(preset)}
+                  className={`px-2 py-0.5 rounded border transition-all ${
+                    monthlyBill === preset
+                      ? "bg-graphite-950 text-white border-graphite-950 font-bold"
+                      : "bg-white text-graphite-700 border-graphite-200 hover:border-solar-400"
+                  }`}
+                >
+                  {currency === "INR" ? `₹${preset.toLocaleString()}` : `$${preset}`}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Slider 2: Available Rooftop Space */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-mono uppercase tracking-wider text-graphite-700 font-bold flex items-center gap-1.5">
+                <Compass className="w-4 h-4 text-solar-500" />
+                <span>Available Rooftop Space</span>
+              </label>
+              <div className="flex items-center gap-1 text-sm font-bold font-mono text-graphite-950 bg-graphite-50 px-3 py-1 rounded-lg border border-graphite-200">
+                <input
+                  type="number"
+                  min={10}
+                  max={300}
+                  step={5}
+                  value={roofSpaceSqM}
+                  onChange={(e) => setRoofSpaceSqM(Math.max(10, Number(e.target.value)))}
+                  className="w-16 bg-transparent text-right outline-none font-mono"
+                />
+                <span className="text-graphite-500 text-xs font-normal">m²</span>
+                <span className="text-graphite-400 text-[10px] font-normal hidden sm:inline">
+                  (~{Math.round(roofSpaceSqM * 10.76)} sq ft)
+                </span>
+              </div>
+            </div>
+
+            <input
+              type="range"
+              min={15}
+              max={250}
+              step={5}
+              value={roofSpaceSqM}
+              onChange={(e) => setRoofSpaceSqM(Number(e.target.value))}
+              className="w-full accent-solar-500 cursor-pointer h-2 bg-graphite-200 rounded-lg"
+            />
+
+            {/* Quick Preset Space Buttons */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-mono text-graphite-500">
+              <span className="text-[10px] text-graphite-400 uppercase">Presets:</span>
+              {[
+                { label: "Compact (30 m²)", val: 30 },
+                { label: "Standard (60 m²)", val: 60 },
+                { label: "Large (110 m²)", val: 110 },
+                { label: "Commercial (200 m²)", val: 200 },
+              ].map((preset) => (
+                <button
+                  key={preset.val}
+                  type="button"
+                  onClick={() => setRoofSpaceSqM(preset.val)}
+                  className={`px-2 py-0.5 rounded border transition-all ${
+                    roofSpaceSqM === preset.val
+                      ? "bg-graphite-950 text-white border-graphite-950 font-bold"
+                      : "bg-white text-graphite-700 border-graphite-200 hover:border-solar-400"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+        </div>
+
+        {/* Dynamic Feasibility & Action Banner */}
+        <div className="p-4 rounded-xl bg-graphite-50 border border-graphite-200 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+              isSpaceConstrained ? "bg-amber-100 text-amber-700" : "bg-emerald-100 text-emerald-700"
+            }`}>
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+            <div>
+              <div className="text-xs font-mono font-bold text-graphite-950">
+                {isSpaceConstrained ? "Space-Constrained Recommended System" : "100% Bill Offset Feasible"}
+              </div>
+              <p className="text-xs text-graphite-600 font-sans mt-0.5">
+                {isSpaceConstrained
+                  ? `${roofSpaceSqM} m² space fits up to ${derivedSystemSizeKw} kW (${Math.floor(roofSpaceSqM / 2.8)} panels), covering ~${Math.min(100, Math.round((derivedSystemSizeKw / idealCapacityFromBillKw) * 100))}% of your power bill.`
+                  : `${roofSpaceSqM} m² space fits up to ${maxCapacityFromSpaceKw} kW. A ${derivedSystemSizeKw} kW system completely covers 100% of your ${currency === "INR" ? `₹${monthlyBill.toLocaleString()}` : `$${monthlyBill}`}/mo bill!`}
+              </p>
+            </div>
+          </div>
+
+          <Button
+            type="button"
+            onClick={() => onOpenAnalysis?.(monthlyBill, roofSpaceSqM)}
+            className="w-full sm:w-auto bg-graphite-950 hover:bg-graphite-900 text-white font-mono text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-sm shrink-0 group"
+          >
+            <span>Run Full 3D Audit</span>
+            <ArrowRight className="w-3.5 h-3.5 text-solar-400 group-hover:translate-x-1 transition-transform" />
+          </Button>
+        </div>
+      </div>
+
       {/* Visual Focal Point: Estimated Payback Hero Banner */}
       <div className="architectural-card rounded-2xl p-8 sm:p-10 border border-solar-400 bg-gradient-to-br from-solar-50/80 via-white to-solar-100/30 shadow-xl relative overflow-hidden">
         
@@ -144,7 +380,7 @@ export function SolarEconomicsSection({
           <div className="md:col-span-6 flex flex-col items-start">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-solar-500 text-graphite-950 font-mono text-xs font-bold uppercase tracking-wider mb-4 shadow-2xs">
               <Calendar className="w-3.5 h-3.5" />
-              <span>PRIMARY ROI FOCAL POINT</span>
+              <span>PAYBACK BASED ON YOUR REQUIREMENTS</span>
             </div>
 
             <div className="flex items-baseline gap-3 mb-2">
@@ -161,7 +397,7 @@ export function SolarEconomicsSection({
             </span>
 
             <p className="text-xs font-sans text-graphite-600 mt-3 leading-relaxed max-w-md">
-              Your system breaks even in <strong className="text-graphite-900">{economics.paybackYears} years</strong>. Every unit generated afterwards represents net profit for 20+ remaining operating years.
+              With a {currency === "INR" ? `₹${monthlyBill.toLocaleString()}` : `$${monthlyBill}`}/mo bill and {roofSpaceSqM} m² space, your {derivedSystemSizeKw} kW system breaks even in <strong className="text-graphite-900">{economics.paybackYears} years</strong>. Afterwards, you enjoy pure savings for 20+ operating years.
             </p>
           </div>
 
@@ -169,20 +405,22 @@ export function SolarEconomicsSection({
           <div className="md:col-span-6 bg-white/90 backdrop-blur-md rounded-xl p-6 border border-graphite-200 shadow-sm space-y-4">
             <div className="flex justify-between items-center pb-3 hairline-b text-xs font-mono">
               <span className="text-graphite-500">Gross Installation Cost</span>
-              <span className="font-bold text-graphite-950">{formatINR(economics.installationCost)}</span>
+              <span className="font-bold text-graphite-950">{formatMoney(economics.installationCost)}</span>
             </div>
 
             <div className="flex justify-between items-center pb-3 hairline-b text-xs font-mono text-emerald-700">
               <span className="flex items-center gap-1.5 font-medium">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                Govt. Assistance (PM Surya Ghar)
+                {currency === "INR" ? "Govt. Assistance (PM Surya Ghar)" : "Federal Clean Energy Credit (30% ITC)"}
               </span>
-              <span className="font-bold">- {formatINR(economics.subsidyAmount)}</span>
+              <span className="font-bold">
+                - {currency === "INR" ? formatINR(economics.subsidyAmount) : `$${Math.round(economics.installationCost * 0.3).toLocaleString()}`}
+              </span>
             </div>
 
             <div className="flex justify-between items-center pt-1 text-sm font-mono font-bold text-graphite-950">
               <span>Estimated Net Investment</span>
-              <span className="text-base text-solar-600">{formatINR(economics.netInvestmentCost)}</span>
+              <span className="text-base text-solar-600">{formatMoney(economics.netInvestmentCost)}</span>
             </div>
           </div>
 
@@ -211,7 +449,7 @@ export function SolarEconomicsSection({
             Installation Cost
           </span>
           <span className="text-2xl font-bold font-sans text-graphite-950">
-            {formatINR(economics.installationCost)}
+            {formatMoney(economics.installationCost)}
           </span>
           <span className="block text-[10px] font-mono text-graphite-400 mt-1">Turnkey Estimate</span>
         </div>
@@ -219,12 +457,14 @@ export function SolarEconomicsSection({
         {/* Metric 3: Govt Assistance */}
         <div className="architectural-card rounded-xl p-5 border border-emerald-200 bg-emerald-50/40">
           <span className="block text-[10px] font-mono uppercase text-emerald-800 font-semibold mb-1">
-            Govt Assistance
+            {currency === "INR" ? "Govt Assistance" : "Federal 30% Tax Credit"}
           </span>
           <span className="text-2xl font-bold font-sans text-emerald-700">
-            {formatINR(economics.subsidyAmount)}
+            {currency === "INR" ? formatINR(economics.subsidyAmount) : `$${Math.round(economics.installationCost * 0.3).toLocaleString()}`}
           </span>
-          <span className="block text-[10px] font-mono text-emerald-600 mt-1">PM Surya Ghar</span>
+          <span className="block text-[10px] font-mono text-emerald-600 mt-1">
+            {currency === "INR" ? "PM Surya Ghar" : "Clean Energy ITC"}
+          </span>
         </div>
 
         {/* Metric 4: Net Investment */}
@@ -233,7 +473,7 @@ export function SolarEconomicsSection({
             Net Investment
           </span>
           <span className="text-2xl font-bold font-sans text-solar-600">
-            {formatINR(economics.netInvestmentCost)}
+            {formatMoney(economics.netInvestmentCost)}
           </span>
           <span className="block text-[10px] font-mono text-solar-800 mt-1">Out-of-Pocket</span>
         </div>
@@ -257,7 +497,7 @@ export function SolarEconomicsSection({
             Annual Savings
           </span>
           <span className="text-2xl font-bold font-sans text-emerald-600">
-            {formatINR(economics.annualSavingsInr)}
+            {formatMoney(economics.annualSavingsInr)}
           </span>
           <span className="block text-[10px] font-mono text-emerald-600 mt-1">/ Year Savings</span>
         </div>

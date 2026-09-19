@@ -39,6 +39,7 @@ export function setCurrentUser(user: UserSession | null): void {
     } else {
       localStorage.removeItem(USER_KEY);
     }
+    window.dispatchEvent(new Event("suryascope_saved_updated"));
   } catch (e) {
     console.warn("Error persisting user session:", e);
   }
