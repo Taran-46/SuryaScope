@@ -105,19 +105,51 @@ export function Hero({ onOpenAnalysis }: HeroProps) {
               {/* Header Bar of 3D Viewport */}
               <div className="px-4 py-3 bg-graphite-50 hairline-b flex items-center justify-between text-xs font-mono text-graphite-600">
                 <div className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                  <span className="font-semibold text-graphite-900">DEMO PROPERTY</span>
-                  <span className="text-graphite-400">|</span>
-                  <span>CADASTRE #8492-B</span>
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="font-semibold text-graphite-900 tracking-tight">3D ROOFTOP SOLAR SIMULATION</span>
                 </div>
-                <div className="flex items-center gap-3 text-[11px]">
-                  <span className="px-2 py-0.5 rounded bg-graphite-200/60 font-mono">24° Pitch</span>
-                  <span className="px-2 py-0.5 rounded bg-solar-100 text-solar-900 font-mono">South Facing</span>
+                <div className="flex items-center gap-2 text-[11px]">
+                  <span className="px-2 py-0.5 rounded bg-graphite-200/70 font-mono text-graphite-700">Demo Cadastre</span>
+                  <span className="px-2 py-0.5 rounded bg-solar-100 text-solar-900 font-mono font-medium">24° South-Facing</span>
                 </div>
               </div>
 
               {/* 3D Scene */}
               <RoofScene />
+
+              {/* 4 Clean Metric Cards Explaining What the Model Shows */}
+              <div className="p-4 bg-white hairline-t">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-left">
+                  <div className="p-2.5 rounded-xl bg-graphite-50 border border-graphite-200/80">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-graphite-500 block">Usable Roof</span>
+                    <span className="text-sm font-bold text-graphite-950">61.7 m²</span>
+                    <span className="text-[10px] text-emerald-600 block mt-0.5 font-medium">Unshaded Area</span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-solar-50/70 border border-solar-200">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-solar-800 block">System Size</span>
+                    <span className="text-sm font-bold text-solar-950">4.8 kW</span>
+                    <span className="text-[10px] text-solar-700 block mt-0.5 font-medium">14 Solar Panels</span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-graphite-50 border border-graphite-200/80">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-graphite-500 block">Sun Exposure</span>
+                    <span className="text-sm font-bold text-graphite-950">94%</span>
+                    <span className="text-[10px] text-graphite-500 block mt-0.5 font-medium">High Potential</span>
+                  </div>
+
+                  <div className="p-2.5 rounded-xl bg-emerald-50/70 border border-emerald-200">
+                    <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-800 block">Est. Generation</span>
+                    <span className="text-sm font-bold text-emerald-950">6,720 kWh</span>
+                    <span className="text-[10px] text-emerald-700 block mt-0.5 font-medium">₹48,500/yr Saved</span>
+                  </div>
+                </div>
+
+                {/* Helpful explanatory caption */}
+                <div className="mt-3 flex items-center justify-between text-[11px] text-graphite-500 font-sans">
+                  <span>💡 <strong>Live Simulation:</strong> Interactive preview of panel layout & solar exposure before physical site visit.</span>
+                </div>
+              </div>
             </div>
           </div>
 

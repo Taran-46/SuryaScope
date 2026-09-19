@@ -7,6 +7,7 @@ import { BenefitsSection } from "@/components/benefits/BenefitsSection";
 import { PreFeasibilityDemo } from "@/components/demo/PreFeasibilityDemo";
 import { SolarEconomicsSection } from "@/components/economics/SolarEconomicsSection";
 import { InstallerLeadsSection } from "@/components/installer/InstallerLeadsSection";
+import { SavedSitesSection } from "@/components/saved/SavedSitesSection";
 import { Footer } from "@/components/footer/Footer";
 import { AssessmentFlowModal } from "@/components/assessment/AssessmentFlowModal";
 
@@ -33,6 +34,9 @@ export default function Home() {
 
         {/* 3 Concise Product Benefits (id="suitability") */}
         <BenefitsSection />
+
+        {/* Dedicated Saved Properties & Audits Section (id="saved-sites") */}
+        <SavedSitesSection onOpenAnalysis={(addr) => handleOpenAssessment(addr)} />
 
         {/* Financial Pre-Feasibility & ROI Section: WILL SOLAR PAY OFF? (id="economics") */}
         <div id="economics" className="bg-white hairline-t hairline-b py-16">

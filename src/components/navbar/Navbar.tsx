@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { SuryascopeLogo } from "@/components/brand/SuryascopeLogo";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Compass, ShieldCheck, Sun, Layers, LogIn } from "lucide-react";
+import { ArrowRight, Compass, ShieldCheck, Sun, Layers, LogIn, Bookmark } from "lucide-react";
 
 interface NavbarProps {
   onOpenAnalysis?: () => void;
@@ -46,6 +46,13 @@ export function Navbar({ onOpenAnalysis }: NavbarProps) {
           >
             <Compass className="w-3.5 h-3.5 text-solar-500" />
             Roof Suitability
+          </a>
+          <a
+            href="#saved-sites"
+            className="hover:text-graphite-950 transition-colors flex items-center gap-1.5"
+          >
+            <Bookmark className="w-3.5 h-3.5 text-solar-500" />
+            Saved Sites
           </a>
           <a
             href="#economics"
