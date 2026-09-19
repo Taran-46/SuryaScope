@@ -5,7 +5,6 @@ import { Navbar } from "@/components/navbar/Navbar";
 import { Hero } from "@/components/hero/Hero";
 import { BenefitsSection } from "@/components/benefits/BenefitsSection";
 import { PreFeasibilityDemo } from "@/components/demo/PreFeasibilityDemo";
-import { SolarEconomicsSection } from "@/components/economics/SolarEconomicsSection";
 import { InstallerLeadsSection } from "@/components/installer/InstallerLeadsSection";
 import { SavedSitesSection } from "@/components/saved/SavedSitesSection";
 import { Footer } from "@/components/footer/Footer";
@@ -41,15 +40,6 @@ export default function Home() {
 
         {/* Dedicated Saved Properties & Audits Section (id="saved-sites") */}
         <SavedSitesSection onOpenAnalysis={(addr) => handleOpenAssessment(addr)} />
-
-        {/* Financial Pre-Feasibility & ROI Section: WILL SOLAR PAY OFF? (id="economics") */}
-        <div id="economics" className="bg-white hairline-t hairline-b py-16">
-          <div className="max-w-7xl mx-auto px-6 sm:px-8">
-            <SolarEconomicsSection
-              onOpenAnalysis={(bill) => handleOpenAssessment(undefined, bill)}
-            />
-          </div>
-        </div>
 
         {/* Installer Leads Section (id="site-visits") */}
         <InstallerLeadsSection />

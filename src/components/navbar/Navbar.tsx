@@ -82,13 +82,14 @@ export function Navbar({ onOpenAnalysis }: NavbarProps) {
             <Bookmark className="w-3.5 h-3.5 text-solar-500" />
             Saved Sites
           </a>
-          <a
-            href="#economics"
-            className="hover:text-graphite-950 transition-colors flex items-center gap-1.5"
+          <button
+            type="button"
+            onClick={onOpenAnalysis}
+            className="hover:text-graphite-950 transition-colors flex items-center gap-1.5 cursor-pointer bg-transparent border-none p-0 uppercase font-mono text-xs font-medium tracking-wide text-graphite-600"
           >
             <Layers className="w-3.5 h-3.5 text-solar-500" />
             Solar Economics
-          </a>
+          </button>
           <a
             href="#site-visits"
             className="hover:text-graphite-950 transition-colors flex items-center gap-1.5"

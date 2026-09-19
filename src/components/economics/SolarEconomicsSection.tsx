@@ -41,12 +41,18 @@ export interface SolarResourceData {
 
 interface SolarEconomicsSectionProps {
   systemSizeKw?: number;
+  initialMonthlyBill?: number;
+  initialRoofSpaceSqM?: number;
+  currency?: "INR" | "USD";
   solarResourceData?: SolarResourceData | null;
   onOpenAnalysis?: (bill?: number, spaceSqM?: number) => void;
 }
 
 export function SolarEconomicsSection({
   systemSizeKw: propSystemSizeKw,
+  initialMonthlyBill,
+  initialRoofSpaceSqM,
+  currency: propCurrency,
   solarResourceData,
   onOpenAnalysis,
 }: SolarEconomicsSectionProps) {
@@ -54,9 +60,30 @@ export function SolarEconomicsSection({
   const [showAssumptionsDrawer, setShowAssumptionsDrawer] = React.useState(false);
 
   // User requirement inputs
-  const [monthlyBill, setMonthlyBill] = React.useState(3500);
-  const [roofSpaceSqM, setRoofSpaceSqM] = React.useState(60);
-  const [currency, setCurrency] = React.useState<"INR" | "USD">("INR");
+  const [currency, setCurrency] = React.useState<"INR" | "USD">(propCurrency || "INR");
+  const [monthlyBill, setMonthlyBill] = React.useState(
+    initialMonthlyBill ?? (propCurrency === "USD" ? 240 : 3500)
+  );
+  const [roofSpaceSqM, setRoofSpaceSqM] = React.useState(initialRoofSpaceSqM ?? 61.7);
+
+  // Sync if external props change
+  React.useEffect(() => {
+    if (initialMonthlyBill !== undefined) {
+      setMonthlyBill(initialMonthlyBill);
+    }
+  }, [initialMonthlyBill]);
+
+  React.useEffect(() => {
+    if (propCurrency !== undefined) {
+      setCurrency(propCurrency);
+    }
+  }, [propCurrency]);
+
+  React.useEffect(() => {
+    if (initialRoofSpaceSqM !== undefined) {
+      setRoofSpaceSqM(initialRoofSpaceSqM);
+    }
+  }, [initialRoofSpaceSqM]);
 
   // Specific yield & tariff
   const specificYield = solarResourceData?.specificYieldKwhPerKw || 1400;
@@ -71,11 +98,11 @@ export function SolarEconomicsSection({
   const annualKwhNeeded = annualBill / tariff;
   const idealCapacityFromBillKw = Number((annualKwhNeeded / specificYield).toFixed(1));
 
-  // Recommended system capacity bounded by space and bill need
+  // Recommended system capacity bounded by space and bill need (or propSystemSizeKw if specified without requirements)
   const isSpaceConstrained = idealCapacityFromBillKw > maxCapacityFromSpaceKw;
-  const derivedSystemSizeKw = propSystemSizeKw || (isSpaceConstrained
+  const derivedSystemSizeKw = isSpaceConstrained
     ? maxCapacityFromSpaceKw
-    : Math.max(1.0, idealCapacityFromBillKw));
+    : Math.max(1.0, idealCapacityFromBillKw);
 
   // Calculate economics using transparent calculation engine
   const economics: SolarCalculationResult = React.useMemo(() => {
@@ -357,14 +384,21 @@ export function SolarEconomicsSection({
             </div>
           </div>
 
-          <Button
-            type="button"
-            onClick={() => onOpenAnalysis?.(monthlyBill, roofSpaceSqM)}
-            className="w-full sm:w-auto bg-graphite-950 hover:bg-graphite-900 text-white font-mono text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-sm shrink-0 group"
-          >
-            <span>Run Full 3D Audit</span>
-            <ArrowRight className="w-3.5 h-3.5 text-solar-400 group-hover:translate-x-1 transition-transform" />
-          </Button>
+          {onOpenAnalysis ? (
+            <Button
+              type="button"
+              onClick={() => onOpenAnalysis(monthlyBill, roofSpaceSqM)}
+              className="w-full sm:w-auto bg-graphite-950 hover:bg-graphite-900 text-white font-mono text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center justify-center gap-2 shadow-sm shrink-0 group"
+            >
+              <span>Run Full 3D Audit</span>
+              <ArrowRight className="w-3.5 h-3.5 text-solar-400 group-hover:translate-x-1 transition-transform" />
+            </Button>
+          ) : (
+            <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-mono font-medium shrink-0">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+              <span>Live Payoff Applied to Audit</span>
+            </div>
+          )}
         </div>
       </div>
 

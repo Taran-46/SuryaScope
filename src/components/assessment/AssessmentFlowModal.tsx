@@ -845,6 +845,8 @@ export function AssessmentFlowModal({
                 geocodeStatus={geocodeStatus}
                 solarResourceData={solarResource}
                 onLocationChange={handleLocationChange}
+                monthlyBill={monthlyBill}
+                currency={currency}
               />
 
               {/* Bottom Sticky Action Bar */}

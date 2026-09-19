@@ -50,6 +50,8 @@ interface ResultsViewProps {
   geocodeStatus?: "IDLE" | "LOADING" | "SUCCESS" | "NO_RESULT" | "ERROR";
   solarResourceData?: SolarResourceData | null;
   onLocationChange?: (latitude: number, longitude: number) => void;
+  monthlyBill?: number;
+  currency?: "INR" | "USD";
 }
 
 export function ResultsView({
@@ -59,6 +61,8 @@ export function ResultsView({
   geocodeStatus = "IDLE",
   solarResourceData,
   onLocationChange,
+  monthlyBill,
+  currency,
 }: ResultsViewProps) {
   const [selectedSegmentId, setSelectedSegmentId] = React.useState<string>("south-east");
 
@@ -460,7 +464,12 @@ export function ResultsView({
       {/* ========================================================
           SOLAR ECONOMICS SECTION: WILL SOLAR PAY OFF?
          ======================================================== */}
-      <SolarEconomicsSection systemSizeKw={4.8} solarResourceData={solarResourceData} />
+      <SolarEconomicsSection
+        initialMonthlyBill={monthlyBill}
+        currency={currency}
+        initialRoofSpaceSqM={61.7}
+        solarResourceData={solarResourceData}
+      />
 
       {/* ========================================================
           AI ROOF ASSESSMENT REPORT SECTION

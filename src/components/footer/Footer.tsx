@@ -33,7 +33,7 @@ export function Footer() {
               </span>
               <ul className="space-y-2.5 text-xs text-graphite-400 font-sans">
                 <li><a href="#suitability" className="hover:text-white transition-colors">Roof Suitability</a></li>
-                <li><a href="#economics" className="hover:text-white transition-colors">Solar Economics</a></li>
+                <li><a href="#saved-sites" className="hover:text-white transition-colors">Saved Sites</a></li>
                 <li><a href="#site-visits" className="hover:text-white transition-colors">Installer Qualified Leads</a></li>
                 <li><a href="#demo" className="hover:text-white transition-colors">Feasibility Simulator</a></li>
               </ul>
