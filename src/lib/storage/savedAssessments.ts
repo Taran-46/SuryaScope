@@ -58,6 +58,11 @@ export function saveAssessment(assessment: Omit<SavedAssessment, "id" | "created
   const existing = getSavedAssessments();
   const user = getCurrentUser();
 
+  // Remove any previous entry for this exact address to avoid duplicates
+  const filtered = existing.filter(
+    (e) => e.address.toLowerCase().trim() !== assessment.address.toLowerCase().trim()
+  );
+
   const newEntry: SavedAssessment = {
     ...assessment,
     id: `audit-${Date.now()}`,
@@ -65,13 +70,50 @@ export function saveAssessment(assessment: Omit<SavedAssessment, "id" | "created
     userEmail: user?.email,
   };
 
-  const updated = [newEntry, ...existing];
+  const updated = [newEntry, ...filtered];
   if (typeof window !== "undefined") {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+      window.dispatchEvent(new Event("suryascope_saved_updated"));
     } catch (e) {
       console.warn("Failed to persist saved assessment:", e);
     }
   }
   return newEntry;
 }
+
+export function removeSavedAssessment(id: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = getSavedAssessments();
+    const updated = existing.filter((item) => item.id !== id);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event("suryascope_saved_updated"));
+  } catch (e) {
+    console.warn("Failed to remove saved assessment:", e);
+  }
+}
+
+export function removeSavedAssessmentByAddress(address: string): void {
+  if (typeof window === "undefined") return;
+  try {
+    const existing = getSavedAssessments();
+    const updated = existing.filter(
+      (item) => item.address.toLowerCase().trim() !== address.toLowerCase().trim()
+    );
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+    window.dispatchEvent(new Event("suryascope_saved_updated"));
+  } catch (e) {
+    console.warn("Failed to remove saved assessment by address:", e);
+  }
+}
+
+export function isAssessmentSaved(address: string): boolean {
+  if (typeof window === "undefined" || !address) return false;
+  const existing = getSavedAssessments();
+  const normalized = address.toLowerCase().trim();
+  return existing.some(
+    (item) => item.address.toLowerCase().trim() === normalized || normalized.includes(item.address.toLowerCase().trim())
+  );
+}
+

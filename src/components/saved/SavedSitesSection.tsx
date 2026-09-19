@@ -3,6 +3,7 @@
 import * as React from "react";
 import {
   Bookmark,
+  BookmarkMinus,
   MapPin,
   Zap,
   TrendingUp,
@@ -16,7 +17,8 @@ import { Button } from "@/components/ui/button";
 import {
   getSavedAssessments,
   SavedAssessment,
-  getCurrentUser
+  getCurrentUser,
+  removeSavedAssessment
 } from "@/lib/storage/savedAssessments";
 
 interface SavedSitesSectionProps {
@@ -36,20 +38,22 @@ export function SavedSitesSection({ onOpenAnalysis }: SavedSitesSectionProps) {
 
   React.useEffect(() => {
     loadSites();
-    // Listen for storage updates
+    // Listen for storage updates across tabs and local events
     window.addEventListener("storage", loadSites);
-    return () => window.removeEventListener("storage", loadSites);
+    window.addEventListener("suryascope_saved_updated", loadSites);
+    return () => {
+      window.removeEventListener("storage", loadSites);
+      window.removeEventListener("suryascope_saved_updated", loadSites);
+    };
   }, [loadSites]);
 
-  const handleDeleteSite = (id: string, e: React.MouseEvent) => {
+  const handleUnsaveSite = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      const existing = getSavedAssessments();
-      const filtered = existing.filter((s) => s.id !== id);
-      localStorage.setItem("suryascope_saved_assessments", JSON.stringify(filtered));
-      setSavedSites(filtered);
+      removeSavedAssessment(id);
+      loadSites();
     } catch (err) {
-      console.warn("Failed to delete saved assessment:", err);
+      console.warn("Failed to unsave assessment:", err);
     }
   };
 
@@ -115,8 +119,8 @@ export function SavedSitesSection({ onOpenAnalysis }: SavedSitesSectionProps) {
 
                       <button
                         type="button"
-                        onClick={(e) => handleDeleteSite(site.id, e)}
-                        title="Remove from saved"
+                        onClick={(e) => handleUnsaveSite(site.id, e)}
+                        title="Unsave property"
                         className="p-1.5 rounded-lg text-graphite-300 hover:text-red-600 hover:bg-red-50 transition-colors"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -157,16 +161,29 @@ export function SavedSitesSection({ onOpenAnalysis }: SavedSitesSectionProps) {
                     </div>
                   </div>
 
-                  {/* Card Footer Action */}
-                  <div className="pt-4 hairline-t flex items-center justify-between">
-                    <span className="text-[10px] font-mono text-graphite-400">
-                      Saved: {new Date(site.createdAt).toLocaleDateString()}
-                    </span>
+                  {/* Card Footer Actions: Explicit Unsave Button + Open Audit Button */}
+                  <div className="pt-4 hairline-t flex items-center justify-between gap-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => handleUnsaveSite(site.id, e)}
+                      className="border-rose-200 text-rose-600 hover:text-rose-700 hover:bg-rose-50 hover:border-rose-300 text-xs font-mono h-8 px-2.5 flex items-center gap-1.5 transition-colors shadow-2xs"
+                      title="Unsave this site"
+                    >
+                      <BookmarkMinus className="w-3.5 h-3.5" />
+                      <span>Unsave</span>
+                    </Button>
 
-                    <span className="text-xs font-mono font-bold text-graphite-950 group-hover:text-solar-600 transition-colors flex items-center gap-1">
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => onOpenAnalysis && onOpenAnalysis(site.address)}
+                      className="bg-graphite-950 hover:bg-graphite-900 text-white text-xs font-mono font-medium h-8 px-3.5 flex items-center gap-1.5 shadow-xs group/btn"
+                    >
                       <span>Open Audit</span>
-                      <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
-                    </span>
+                      <ArrowRight className="w-3.5 h-3.5 text-solar-400 group-hover/btn:translate-x-0.5 transition-transform" />
+                    </Button>
                   </div>
                 </div>
               );

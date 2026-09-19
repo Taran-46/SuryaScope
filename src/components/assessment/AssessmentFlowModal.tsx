@@ -18,6 +18,7 @@ import {
   DollarSign,
   IndianRupee,
   Bookmark,
+  BookmarkMinus,
   Layers,
   Check
 } from "lucide-react";
@@ -26,7 +27,13 @@ import { DEMO_SCENARIOS, ANALYSIS_STEPS, ScenarioType } from "./assessmentData";
 import { ResultsView } from "@/components/results/ResultsView";
 import { OverheadRoofMap } from "@/components/map/OverheadRoofMap";
 import { AuthModal } from "@/components/auth/AuthModal";
-import { saveAssessment, getCurrentUser, UserSession } from "@/lib/storage/savedAssessments";
+import {
+  saveAssessment,
+  getCurrentUser,
+  removeSavedAssessmentByAddress,
+  isAssessmentSaved,
+  UserSession
+} from "@/lib/storage/savedAssessments";
 
 const RoofScene = dynamic(
   () => import("@/components/hero/RoofScene").then((mod) => mod.RoofScene),
@@ -95,6 +102,27 @@ export function AssessmentFlowModal({
   // Auth & Saved Assessment State
   const [isAuthOpen, setIsAuthOpen] = React.useState(false);
   const [savedSuccessMsg, setSavedSuccessMsg] = React.useState<string | null>(null);
+  const [isSaved, setIsSaved] = React.useState(false);
+
+  // Synchronize saved state when location or step changes
+  React.useEffect(() => {
+    const currentAddr = resolvedLocation?.displayName || address;
+    setIsSaved(isAssessmentSaved(currentAddr));
+  }, [step, resolvedLocation, address]);
+
+  // Listen for storage events
+  React.useEffect(() => {
+    const checkSaved = () => {
+      const currentAddr = resolvedLocation?.displayName || address;
+      setIsSaved(isAssessmentSaved(currentAddr));
+    };
+    window.addEventListener("suryascope_saved_updated", checkSaved);
+    window.addEventListener("storage", checkSaved);
+    return () => {
+      window.removeEventListener("suryascope_saved_updated", checkSaved);
+      window.removeEventListener("storage", checkSaved);
+    };
+  }, [resolvedLocation, address]);
 
   // Sync initial props
   React.useEffect(() => {
@@ -105,6 +133,7 @@ export function AssessmentFlowModal({
       setGeocodeError(null);
       setSolarResource(null);
       setSavedSuccessMsg(null);
+      setIsSaved(isAssessmentSaved(initialAddress));
     }
   }, [isOpen, initialAddress, initialBill]);
 
@@ -229,7 +258,19 @@ export function AssessmentFlowModal({
     }
   };
 
-  // Handle Save Assessment Action
+  // Handle Save / Unsave Toggle Action
+  const handleToggleSave = () => {
+    const currentAddr = resolvedLocation?.displayName || address;
+    if (isSaved) {
+      removeSavedAssessmentByAddress(currentAddr);
+      setIsSaved(false);
+      setSavedSuccessMsg("Property unsaved and removed from your saved audits.");
+      setTimeout(() => setSavedSuccessMsg(null), 3500);
+      return;
+    }
+    handleSaveAssessment();
+  };
+
   const handleSaveAssessment = () => {
     const user = getCurrentUser();
     if (!user) {
@@ -237,6 +278,7 @@ export function AssessmentFlowModal({
       return;
     }
 
+    const currentAddr = resolvedLocation?.displayName || address;
     const lat = resolvedLocation?.latitude || 37.4419;
     const lon = resolvedLocation?.longitude || -122.1430;
     const specificYield = solarResource?.specificYieldKwhPerKw || 1400;
@@ -244,7 +286,7 @@ export function AssessmentFlowModal({
     const annualSav = Math.round(annualGen * (currency === "INR" ? 6.5 : 0.15));
 
     saveAssessment({
-      address: resolvedLocation?.displayName || address,
+      address: currentAddr,
       monthlyBill,
       currency,
       latitude: lat,
@@ -254,6 +296,7 @@ export function AssessmentFlowModal({
       paybackYears: 4.2,
     });
 
+    setIsSaved(true);
     setSavedSuccessMsg(`Assessment saved to account (${user.email})`);
     setTimeout(() => setSavedSuccessMsg(null), 4000);
   };
@@ -386,13 +429,26 @@ export function AssessmentFlowModal({
           <div className="flex items-center gap-2">
             <Button
               type="button"
-              onClick={handleSaveAssessment}
+              onClick={handleToggleSave}
               variant="outline"
               size="sm"
-              className="border-graphite-300 text-graphite-800 hover:bg-graphite-100 text-xs font-mono flex items-center gap-1.5"
+              className={`border text-xs font-mono flex items-center gap-1.5 transition-colors ${
+                isSaved
+                  ? "border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:border-rose-400"
+                  : "border-graphite-300 text-graphite-800 hover:bg-graphite-100"
+              }`}
             >
-              <Bookmark className="w-3.5 h-3.5 text-solar-600" />
-              <span className="hidden sm:inline">Save Assessment</span>
+              {isSaved ? (
+                <>
+                  <BookmarkMinus className="w-3.5 h-3.5 text-rose-600" />
+                  <span className="hidden sm:inline">Unsave Site</span>
+                </>
+              ) : (
+                <>
+                  <Bookmark className="w-3.5 h-3.5 text-solar-600" />
+                  <span className="hidden sm:inline">Save Assessment</span>
+                </>
+              )}
             </Button>
 
             <button
@@ -804,12 +860,25 @@ export function AssessmentFlowModal({
 
                 <div className="flex items-center gap-3 w-full sm:w-auto">
                   <Button
-                    onClick={handleSaveAssessment}
+                    onClick={handleToggleSave}
                     variant="outline"
-                    className="w-full sm:w-auto border-solar-400 bg-solar-50/50 hover:bg-solar-100 text-solar-950 flex items-center gap-2"
+                    className={`w-full sm:w-auto flex items-center gap-2 transition-all ${
+                      isSaved
+                        ? "border-rose-300 bg-rose-50 text-rose-700 hover:bg-rose-100 hover:border-rose-400 shadow-2xs"
+                        : "border-solar-400 bg-solar-50/50 hover:bg-solar-100 text-solar-950"
+                    }`}
                   >
-                    <Bookmark className="w-4 h-4 text-solar-600" />
-                    <span>Save Assessment</span>
+                    {isSaved ? (
+                      <>
+                        <BookmarkMinus className="w-4 h-4 text-rose-600" />
+                        <span>Unsave Property</span>
+                      </>
+                    ) : (
+                      <>
+                        <Bookmark className="w-4 h-4 text-solar-600" />
+                        <span>Save Assessment</span>
+                      </>
+                    )}
                   </Button>
 
                   <Button
