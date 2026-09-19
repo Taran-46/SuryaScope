@@ -6,6 +6,7 @@ import { Hero } from "@/components/hero/Hero";
 import { BenefitsSection } from "@/components/benefits/BenefitsSection";
 import { PreFeasibilityDemo } from "@/components/demo/PreFeasibilityDemo";
 import { SolarEconomicsSection } from "@/components/economics/SolarEconomicsSection";
+import { InstallerLeadsSection } from "@/components/installer/InstallerLeadsSection";
 import { Footer } from "@/components/footer/Footer";
 import { AssessmentFlowModal } from "@/components/assessment/AssessmentFlowModal";
 
@@ -30,15 +31,18 @@ export default function Home() {
         {/* Hero Section */}
         <Hero onOpenAnalysis={() => handleOpenAssessment()} />
 
-        {/* 3 Concise Product Benefits */}
+        {/* 3 Concise Product Benefits (id="suitability") */}
         <BenefitsSection />
 
-        {/* Financial Pre-Feasibility & ROI Section: WILL SOLAR PAY OFF? */}
+        {/* Financial Pre-Feasibility & ROI Section: WILL SOLAR PAY OFF? (id="economics") */}
         <div id="economics" className="bg-white hairline-t hairline-b py-16">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <SolarEconomicsSection systemSizeKw={4.8} />
           </div>
         </div>
+
+        {/* Installer Leads Section (id="site-visits") */}
+        <InstallerLeadsSection />
 
         {/* Interactive Pre-Feasibility Address Search Simulator */}
         <PreFeasibilityDemo onOpenAnalysis={(addr) => handleOpenAssessment(addr)} />

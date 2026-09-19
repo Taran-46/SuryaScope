@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { Sun, Compass, ShieldCheck, ArrowUpRight } from "lucide-react";
+import { SuryascopeLogo } from "@/components/brand/SuryascopeLogo";
+import { Compass, ShieldCheck, ArrowUpRight } from "lucide-react";
 
 export function Footer() {
   return (
@@ -12,11 +13,8 @@ export function Footer() {
           
           {/* Brand Info */}
           <div className="md:col-span-5 flex flex-col items-start">
-            <div className="flex items-center gap-2.5 mb-4">
-              <div className="w-7 h-7 rounded bg-solar-500 flex items-center justify-center text-graphite-950 font-bold">
-                <Sun className="w-4 h-4 stroke-[2.5]" />
-              </div>
-              <span className="text-lg font-bold tracking-tight text-white font-sans">SURYASCOPE</span>
+            <div className="mb-4">
+              <SuryascopeLogo size="lg" darkBackground={true} />
             </div>
             <p className="text-xs font-sans text-graphite-400 leading-relaxed max-w-sm mb-6">
               Rooftop solar pre-feasibility platform. Know your roof&apos;s solar potential, estimated savings and payback before scheduling a physical site visit.

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import { SuryascopeLogo } from "@/components/brand/SuryascopeLogo";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Compass, ShieldCheck, Sun, Layers, LogIn } from "lucide-react";
 
@@ -31,19 +32,10 @@ export function Navbar({ onOpenAnalysis }: NavbarProps) {
       <div className="max-w-7xl mx-auto px-6 sm:px-8 flex items-center justify-between">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div className="w-8 h-8 rounded-lg bg-graphite-950 flex items-center justify-center text-solar-400 group-hover:scale-105 transition-transform duration-200 shadow-sm">
-            <Sun className="h-4.5 w-4.5 stroke-[2.2]" />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-graphite-950 tracking-tight text-base font-sans">
-                SURYASCOPE
-              </span>
-              <span className="text-[10px] uppercase font-mono font-medium tracking-wider px-1.5 py-0.5 rounded bg-graphite-100 text-graphite-600 border border-graphite-200">
-                Pre-Feasibility
-              </span>
-            </div>
-          </div>
+          <SuryascopeLogo size="md" />
+          <span className="text-[10px] uppercase font-mono font-medium tracking-wider px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-800 border border-cyan-200">
+            Pre-Feasibility
+          </span>
         </Link>
 
         {/* Navigation Links */}
@@ -73,6 +65,15 @@ export function Navbar({ onOpenAnalysis }: NavbarProps) {
 
         {/* CTA & Login Buttons */}
         <div className="flex items-center gap-3">
+          <Button
+            onClick={onOpenAnalysis}
+            size="sm"
+            className="bg-graphite-950 hover:bg-graphite-900 text-white rounded-md px-4 py-2 text-xs font-medium tracking-wide font-sans shadow-sm flex items-center gap-2 transition-all hover:gap-2.5"
+          >
+            <span>Analyse my roof</span>
+            <ArrowRight className="w-3.5 h-3.5 text-solar-400" />
+          </Button>
+
           <Link href="/login">
             <Button
               variant="outline"
@@ -83,15 +84,6 @@ export function Navbar({ onOpenAnalysis }: NavbarProps) {
               <span>Sign In</span>
             </Button>
           </Link>
-
-          <Button
-            onClick={onOpenAnalysis}
-            size="sm"
-            className="bg-graphite-950 hover:bg-graphite-900 text-white rounded-md px-4 py-2 text-xs font-medium tracking-wide font-sans shadow-sm flex items-center gap-2 transition-all hover:gap-2.5"
-          >
-            <span>Analyse my roof</span>
-            <ArrowRight className="w-3.5 h-3.5 text-solar-400" />
-          </Button>
         </div>
       </div>
     </header>

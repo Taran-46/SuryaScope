@@ -42,8 +42,8 @@ export function Hero({ onOpenAnalysis }: HeroProps) {
           <div className="lg:col-span-6 flex flex-col items-start text-left">
             
             {/* Above Headline Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-solar-100/80 border border-solar-300 text-solar-900 text-xs font-mono font-medium uppercase tracking-wider mb-6 shadow-2xs">
-              <Sun className="w-3.5 h-3.5 text-solar-600" />
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-cyan-900 text-xs font-mono font-semibold uppercase tracking-wider mb-6 shadow-2xs">
+              <Sun className="w-3.5 h-3.5 text-solar-500" />
               <span>ROOFTOP SOLAR INTELLIGENCE</span>
             </div>
 

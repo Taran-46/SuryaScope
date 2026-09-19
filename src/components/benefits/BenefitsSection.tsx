@@ -50,7 +50,7 @@ export function BenefitsSection() {
   ];
 
   return (
-    <section className="py-24 bg-white hairline-t hairline-b relative">
+    <section id="suitability" className="py-24 bg-white hairline-t hairline-b relative">
       <div className="max-w-7xl mx-auto px-6 sm:px-8">
         
         {/* Section Header */}
@@ -75,7 +75,6 @@ export function BenefitsSection() {
             return (
               <div
                 key={item.id}
-                id={item.id}
                 className="architectural-card architectural-card-hover rounded-xl p-8 flex flex-col justify-between"
               >
                 <div>
