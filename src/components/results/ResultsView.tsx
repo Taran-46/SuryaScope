@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { ROOF_SEGMENTS, RoofSegmentData } from "./roofSegmentsData";
-import { SolarEconomicsSection } from "@/components/economics/SolarEconomicsSection";
+import { SolarEconomicsSection, SolarResourceData } from "@/components/economics/SolarEconomicsSection";
 import { AiRoofAssessmentSection } from "@/components/ai/AiRoofAssessmentSection";
 
 const RoofScene = dynamic(
@@ -47,6 +47,7 @@ interface ResultsViewProps {
   address?: string;
   geocodedLocation?: GeocodedLocation | null;
   geocodeStatus?: "IDLE" | "LOADING" | "SUCCESS" | "NO_RESULT" | "ERROR";
+  solarResourceData?: SolarResourceData | null;
 }
 
 export function ResultsView({
@@ -54,6 +55,7 @@ export function ResultsView({
   address = "1248 Solar Way, Palo Alto, CA",
   geocodedLocation,
   geocodeStatus = "IDLE",
+  solarResourceData,
 }: ResultsViewProps) {
   const [selectedSegmentId, setSelectedSegmentId] = React.useState<string>("south-east");
 
@@ -114,12 +116,27 @@ export function ResultsView({
               </h1>
             </div>
 
-            {/* Primary Status Banner */}
-            <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/40 text-emerald-900 shadow-sm shrink-0">
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="text-xs font-mono font-bold tracking-widest uppercase">
-                GOOD SOLAR POTENTIAL
-              </span>
+            {/* Primary Status Banner & Solar Resource Badge */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 shrink-0">
+              {solarResourceData && (
+                <div className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-solar-50 border border-solar-200 text-solar-950 text-xs font-mono">
+                  <Sun className="w-4 h-4 text-solar-600 shrink-0" />
+                  <div>
+                    <span className="font-bold block text-solar-900 leading-none">
+                      {solarResourceData.annualSolarResource.toLocaleString()} {solarResourceData.unit}
+                    </span>
+                    <span className="text-[10px] text-solar-700 block mt-0.5 font-medium">
+                      {solarResourceData.source} {solarResourceData.isEstimate ? "(Estimate)" : "(Measured)"}
+                    </span>
+                  </div>
+                </div>
+              )}
+              <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/40 text-emerald-900 shadow-sm shrink-0">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-mono font-bold tracking-widest uppercase">
+                  GOOD SOLAR POTENTIAL
+                </span>
+              </div>
             </div>
           </div>
 
@@ -412,7 +429,7 @@ export function ResultsView({
       {/* ========================================================
           SOLAR ECONOMICS SECTION: WILL SOLAR PAY OFF?
          ======================================================== */}
-      <SolarEconomicsSection systemSizeKw={4.8} />
+      <SolarEconomicsSection systemSizeKw={4.8} solarResourceData={solarResourceData} />
 
       {/* ========================================================
           AI ROOF ASSESSMENT REPORT SECTION
@@ -428,11 +445,13 @@ export function ResultsView({
           shading: "Low (0% Obstruction)",
           solarExposurePercent: 94,
           recommendedCapacityKw: 4.8,
-          annualGenerationKwh: 6720,
+          annualGenerationKwh: Math.round(4.8 * (solarResourceData?.specificYieldKwhPerKw || 1400)),
           installationCostInr: 200000,
           subsidyInr: 78000,
-          annualSavingsInr: 43680,
-          paybackYears: 4.2,
+          annualSavingsInr: Math.round(4.8 * (solarResourceData?.specificYieldKwhPerKw || 1400) * 6.5),
+          paybackYears: Number(
+            (122000 / (4.8 * (solarResourceData?.specificYieldKwhPerKw || 1400) * 6.5)).toFixed(1)
+          ),
         }}
       />
 

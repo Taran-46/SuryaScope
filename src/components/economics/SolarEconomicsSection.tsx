@@ -20,24 +20,42 @@ import {
   AlertCircle
 } from "lucide-react";
 
-interface SolarEconomicsSectionProps {
-  systemSizeKw?: number;
+export interface SolarResourceData {
+  annualSolarResource: number;
+  specificYieldKwhPerKw: number;
+  unit: string;
+  source: string;
+  dataYear: string;
+  isEstimate: boolean;
+  fallbackReason?: string;
 }
 
-export function SolarEconomicsSection({ systemSizeKw = 4.8 }: SolarEconomicsSectionProps) {
+interface SolarEconomicsSectionProps {
+  systemSizeKw?: number;
+  solarResourceData?: SolarResourceData | null;
+}
+
+export function SolarEconomicsSection({
+  systemSizeKw = 4.8,
+  solarResourceData,
+}: SolarEconomicsSectionProps) {
   const [animatedProgress, setAnimatedProgress] = React.useState(0);
 
   // Calculate economics using separate engine
   const economics: SolarCalculationResult = React.useMemo(() => {
+    const specificYield = solarResourceData?.specificYieldKwhPerKw || 1400;
     return calculateSolarEconomics({
       systemSizeKw,
       costPerKw: 41666, // ₹2,00,000 / 4.8 kW
       subsidyAmount: 78000, // PM Surya Ghar subsidy
-      annualGenerationPerKw: 1400,
+      annualGenerationPerKw: specificYield,
       electricityTariffPerKwh: 6.5,
       analysisYears: 10,
+      solarResourceGhi: solarResourceData?.annualSolarResource,
+      isEstimate: solarResourceData?.isEstimate ?? true,
+      solarSource: solarResourceData?.source || "Regional Climatological Fallback",
     });
-  }, [systemSizeKw]);
+  }, [systemSizeKw, solarResourceData]);
 
   // Trigger chart entrance animation
   React.useEffect(() => {
@@ -88,9 +106,20 @@ export function SolarEconomicsSection({ systemSizeKw = 4.8 }: SolarEconomicsSect
           </h2>
         </div>
 
-        <div className="flex items-center gap-1.5 text-xs font-mono text-graphite-500 bg-graphite-100 px-3 py-1.5 rounded-md border border-graphite-200">
-          <Info className="w-3.5 h-3.5 text-solar-500" />
-          <span>PM Surya Ghar Subsidy Model Included</span>
+        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+          <div className="flex items-center gap-1.5 text-xs font-mono text-graphite-700 bg-graphite-100 px-3 py-1.5 rounded-md border border-graphite-200">
+            <Zap className="w-3.5 h-3.5 text-solar-500" />
+            <span>
+              {solarResourceData?.source
+                ? `${solarResourceData.source}${solarResourceData.isEstimate ? " (Fallback)" : " (Measured)"}`
+                : "PM Surya Ghar Model"}
+            </span>
+          </div>
+          {solarResourceData?.annualSolarResource && (
+            <div className="text-xs font-mono px-3 py-1.5 rounded-md bg-solar-50 text-solar-900 border border-solar-200 font-bold">
+              GHI: {solarResourceData.annualSolarResource.toLocaleString()} kWh/m²/yr
+            </div>
+          )}
         </div>
       </div>
 

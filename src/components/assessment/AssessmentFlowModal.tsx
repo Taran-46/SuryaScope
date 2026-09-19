@@ -60,10 +60,19 @@ export function AssessmentFlowModal({
   const [monthlyBill, setMonthlyBill] = React.useState(initialBill);
   const [selectedScenario, setSelectedScenario] = React.useState<ScenarioType>("GOOD");
   
-  // Geocoding State
+  // Geocoding & Solar Resource State
   const [geocodeStatus, setGeocodeStatus] = React.useState<GeocodeStatus>("IDLE");
   const [geocodeError, setGeocodeError] = React.useState<string | null>(null);
   const [resolvedLocation, setResolvedLocation] = React.useState<GeocodedLocation | null>(null);
+  const [solarResource, setSolarResource] = React.useState<{
+    annualSolarResource: number;
+    specificYieldKwhPerKw: number;
+    unit: string;
+    source: string;
+    dataYear: string;
+    isEstimate: boolean;
+    fallbackReason?: string;
+  } | null>(null);
 
   // Analysis progress
   const [currentAnalysisIndex, setCurrentAnalysisIndex] = React.useState(0);
@@ -76,6 +85,7 @@ export function AssessmentFlowModal({
       setMonthlyBill(initialBill);
       setGeocodeStatus("IDLE");
       setGeocodeError(null);
+      setSolarResource(null);
     }
   }, [isOpen, initialAddress, initialBill]);
 
@@ -86,6 +96,7 @@ export function AssessmentFlowModal({
     setMonthlyBill(DEMO_SCENARIOS[scen].monthlyBill);
     setGeocodeStatus("IDLE");
     setGeocodeError(null);
+    setSolarResource(null);
   };
 
   // Start analysis flow with server-side geocoding lookup
@@ -125,6 +136,32 @@ export function AssessmentFlowModal({
         latitude: data.latitude,
         longitude: data.longitude,
       });
+
+      // Call server-side solar resource API with resolved lat & lon
+      try {
+        const solarRes = await fetch("/api/solar-resource", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            latitude: data.latitude,
+            longitude: data.longitude,
+          }),
+        });
+        const solarData = await solarRes.json();
+        if (solarData.success) {
+          setSolarResource({
+            annualSolarResource: solarData.annualSolarResource,
+            specificYieldKwhPerKw: solarData.specificYieldKwhPerKw,
+            unit: solarData.unit,
+            source: solarData.source,
+            dataYear: solarData.dataYear,
+            isEstimate: solarData.isEstimate,
+            fallbackReason: solarData.fallbackReason,
+          });
+        }
+      } catch (solarErr) {
+        console.warn("Solar resource fetch error:", solarErr);
+      }
 
       // Proceed to step 2 (ANALYZING)
       setStep("ANALYZING");
@@ -489,6 +526,7 @@ export function AssessmentFlowModal({
                 address={address}
                 geocodedLocation={resolvedLocation}
                 geocodeStatus={geocodeStatus}
+                solarResourceData={solarResource}
               />
 
               {/* Bottom Sticky Action Bar */}

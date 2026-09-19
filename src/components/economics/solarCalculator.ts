@@ -5,6 +5,9 @@ export interface SolarCalculationInput {
   annualGenerationPerKw: number;
   electricityTariffPerKwh: number;
   analysisYears?: number;
+  solarResourceGhi?: number; // kWh/m²/year
+  isEstimate?: boolean;
+  solarSource?: string;
 }
 
 export interface SolarCalculationResult {
@@ -17,6 +20,9 @@ export interface SolarCalculationResult {
   paybackYears: number;
   monthlySavingsInr: number;
   cumulativeCashflow: { year: number; netCash: number; isBreakEven?: boolean }[];
+  solarResourceGhi?: number;
+  isEstimate?: boolean;
+  solarSource?: string;
 }
 
 // Indian Rupee currency formatter (e.g. ₹2,00,000)
@@ -46,6 +52,9 @@ export function calculateSolarEconomics(
     annualGenerationPerKw = 1400, // 1400 kWh/kW/year average in India
     electricityTariffPerKwh = 6.5, // ₹6.5/kWh average commercial/res tariff
     analysisYears = 10,
+    solarResourceGhi,
+    isEstimate = true,
+    solarSource = "Regional Climatological Fallback",
   } = input;
 
   const installationCost = Math.round(systemSizeKw * costPerKw); // ~ ₹2,00,000
@@ -90,5 +99,8 @@ export function calculateSolarEconomics(
     paybackYears,
     monthlySavingsInr,
     cumulativeCashflow,
+    solarResourceGhi,
+    isEstimate,
+    solarSource,
   };
 }
