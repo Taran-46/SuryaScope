@@ -317,6 +317,38 @@ export function AssessmentFlowModal({
   const currentSymbol = currency === "INR" ? "₹" : "$";
   const billPresets = currency === "INR" ? [2500, 5000, 10000, 20000] : [100, 250, 500, 800];
 
+  // Handle Location Pin Drag / Adjustment from Interactive Map
+  const handleLocationChange = async (lat: number, lon: number) => {
+    setResolvedLocation((prev) => ({
+      displayName: prev?.displayName ? `${prev.displayName.split(" (")[0]} (Adjusted Location Pin)` : address,
+      latitude: lat,
+      longitude: lon,
+    }));
+
+    // Re-fetch solar resource for newly adjusted coordinates
+    try {
+      const solarRes = await fetch("/api/solar-resource", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ latitude: lat, longitude: lon }),
+      });
+      const solarData = await solarRes.json();
+      if (solarData.success) {
+        setSolarResource({
+          annualSolarResource: solarData.annualSolarResource,
+          specificYieldKwhPerKw: solarData.specificYieldKwhPerKw,
+          unit: solarData.unit,
+          source: solarData.source,
+          dataYear: solarData.dataYear,
+          isEstimate: solarData.isEstimate,
+          fallbackReason: solarData.fallbackReason,
+        });
+      }
+    } catch (solarErr) {
+      console.warn("Solar resource re-fetch error for adjusted location:", solarErr);
+    }
+  };
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-graphite-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
       <div className="relative w-full max-w-6xl bg-white rounded-2xl shadow-2xl border border-graphite-200 overflow-hidden flex flex-col max-h-[95vh]">
@@ -338,7 +370,7 @@ export function AssessmentFlowModal({
           {/* Breadcrumb Steps Indicator */}
           <div className="hidden sm:flex items-center gap-2 text-xs font-mono">
             <span className={step === "INPUT" ? "text-solar-600 font-bold" : "text-graphite-400"}>
-              1. Input & Overhead Roof
+              1. Input & Location
             </span>
             <ChevronRight className="w-3 h-3 text-graphite-300" />
             <span className={step === "ANALYZING" ? "text-solar-600 font-bold" : "text-graphite-400"}>
@@ -636,13 +668,7 @@ export function AssessmentFlowModal({
                       latitude={resolvedLocation?.latitude || 37.4419}
                       longitude={resolvedLocation?.longitude || -122.1430}
                       displayName={resolvedLocation?.displayName || address}
-                      onLocationChange={(lat, lon) => {
-                        setResolvedLocation({
-                          displayName: `${address} (Adjusted Roof Pin)`,
-                          latitude: lat,
-                          longitude: lon,
-                        });
-                      }}
+                      onLocationChange={handleLocationChange}
                     />
                   </div>
 
@@ -762,6 +788,7 @@ export function AssessmentFlowModal({
                 geocodedLocation={resolvedLocation}
                 geocodeStatus={geocodeStatus}
                 solarResourceData={solarResource}
+                onLocationChange={handleLocationChange}
               />
 
               {/* Bottom Sticky Action Bar */}

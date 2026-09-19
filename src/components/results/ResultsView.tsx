@@ -23,6 +23,7 @@ import dynamic from "next/dynamic";
 import { ROOF_SEGMENTS, RoofSegmentData } from "./roofSegmentsData";
 import { SolarEconomicsSection, SolarResourceData } from "@/components/economics/SolarEconomicsSection";
 import { AiRoofAssessmentSection } from "@/components/ai/AiRoofAssessmentSection";
+import { PropertyLocationMap } from "@/components/map/PropertyLocationMap";
 
 const RoofScene = dynamic(
   () => import("@/components/hero/RoofScene").then((mod) => mod.RoofScene),
@@ -48,6 +49,7 @@ interface ResultsViewProps {
   geocodedLocation?: GeocodedLocation | null;
   geocodeStatus?: "IDLE" | "LOADING" | "SUCCESS" | "NO_RESULT" | "ERROR";
   solarResourceData?: SolarResourceData | null;
+  onLocationChange?: (latitude: number, longitude: number) => void;
 }
 
 export function ResultsView({
@@ -56,6 +58,7 @@ export function ResultsView({
   geocodedLocation,
   geocodeStatus = "IDLE",
   solarResourceData,
+  onLocationChange,
 }: ResultsViewProps) {
   const [selectedSegmentId, setSelectedSegmentId] = React.useState<string>("south-east");
 
@@ -196,6 +199,34 @@ export function ResultsView({
           </div>
 
         </div>
+      </div>
+
+      {/* ========================================================
+          LOCATION SECTION: INTERACTIVE GEOSPATIAL PROPERTY MAP
+         ======================================================== */}
+      <div className="space-y-4">
+        <div className="flex items-center justify-between px-2">
+          <div>
+            <span className="text-xs font-mono uppercase tracking-widest text-cyan-700 font-semibold block mb-1">
+              STEP 1 — LOCATION & GEOSPATIAL CONTEXT
+            </span>
+            <h2 className="text-2xl font-bold font-sans text-graphite-950">
+              Interactive Property Location Map
+            </h2>
+          </div>
+
+          <div className="hidden sm:flex items-center gap-2 text-xs font-mono text-graphite-600 bg-white border border-graphite-200 rounded-lg px-3 py-1.5 shadow-xs">
+            <Compass className="w-3.5 h-3.5 text-solar-500" />
+            <span>Toggle Satellite / Street layers or drag pin to fine-tune position</span>
+          </div>
+        </div>
+
+        <PropertyLocationMap
+          latitude={geocodedLocation?.latitude || 37.4419}
+          longitude={geocodedLocation?.longitude || -122.1430}
+          displayName={geocodedLocation?.displayName || address}
+          onLocationChange={onLocationChange}
+        />
       </div>
 
       {/* ========================================================
