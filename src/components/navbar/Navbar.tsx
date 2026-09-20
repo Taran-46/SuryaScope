@@ -5,11 +5,8 @@ import Link from "next/link";
 import { SuryascopeLogo } from "@/components/brand/SuryascopeLogo";
 import { Button } from "@/components/ui/button";
 import {
-  ArrowRight,
   Compass,
   ShieldCheck,
-  Sun,
-  Layers,
   LogIn,
   LogOut,
   User,
@@ -57,16 +54,18 @@ export function Navbar({ onOpenAnalysis }: NavbarProps) {
           : "bg-transparent py-5"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 sm:px-8 flex items-center justify-between">
-        {/* Brand Logo */}
-        <Link href="/" className="flex items-center gap-3 group">
-          <SuryascopeLogo size="md" />
-          <span className="text-[10px] uppercase font-mono font-medium tracking-wider px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-800 border border-cyan-200">
-            Pre-Feasibility
-          </span>
-        </Link>
+      <div className="w-full px-4 sm:px-8 flex items-center justify-between">
+        {/* Brand Logo & Name (Moved to the left side) */}
+        <div className="flex items-center">
+          <Link href="/" className="flex items-center gap-2.5 group">
+            <SuryascopeLogo size="md" />
+            <span className="text-[10px] uppercase font-mono font-medium tracking-wider px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-800 border border-cyan-200">
+              Pre-Feasibility
+            </span>
+          </Link>
+        </div>
 
-        {/* Navigation Links */}
+        {/* Navigation Links (Analyze options removed) */}
         <nav className="hidden md:flex items-center gap-8 text-xs font-medium tracking-wide uppercase font-mono text-graphite-600">
           <a
             href="#suitability"
@@ -82,14 +81,6 @@ export function Navbar({ onOpenAnalysis }: NavbarProps) {
             <Bookmark className="w-3.5 h-3.5 text-solar-500" />
             Saved Sites
           </a>
-          <button
-            type="button"
-            onClick={onOpenAnalysis}
-            className="hover:text-graphite-950 transition-colors flex items-center gap-1.5 cursor-pointer bg-transparent border-none p-0 uppercase font-mono text-xs font-medium tracking-wide text-graphite-600"
-          >
-            <Layers className="w-3.5 h-3.5 text-solar-500" />
-            Solar Economics
-          </button>
           <a
             href="#site-visits"
             className="hover:text-graphite-950 transition-colors flex items-center gap-1.5"
@@ -99,17 +90,8 @@ export function Navbar({ onOpenAnalysis }: NavbarProps) {
           </a>
         </nav>
 
-        {/* CTA & Login/Logout Buttons */}
+        {/* User Session & Sign In / Log Out (Analyze button removed) */}
         <div className="flex items-center gap-3">
-          <Button
-            onClick={onOpenAnalysis}
-            size="sm"
-            className="bg-graphite-950 hover:bg-graphite-900 text-white rounded-md px-4 py-2 text-xs font-medium tracking-wide font-sans shadow-sm flex items-center gap-2 transition-all hover:gap-2.5"
-          >
-            <span>Analyse my roof</span>
-            <ArrowRight className="w-3.5 h-3.5 text-solar-400" />
-          </Button>
-
           {currentUser ? (
             <div className="flex items-center gap-2">
               <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-graphite-100 border border-graphite-200 text-xs font-mono text-graphite-800">
