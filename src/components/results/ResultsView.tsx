@@ -24,6 +24,7 @@ import { ROOF_SEGMENTS, RoofSegmentData } from "./roofSegmentsData";
 import { SolarEconomicsSection, SolarResourceData } from "@/components/economics/SolarEconomicsSection";
 import { AiRoofAssessmentSection } from "@/components/ai/AiRoofAssessmentSection";
 import { PropertyLocationMap } from "@/components/map/PropertyLocationMap";
+import { RooftopSatelliteScanner } from "@/components/scanner/RooftopSatelliteScanner";
 
 const RoofScene = dynamic(
   () => import("@/components/hero/RoofScene").then((mod) => mod.RoofScene),
@@ -65,6 +66,13 @@ export function ResultsView({
   currency,
 }: ResultsViewProps) {
   const [selectedSegmentId, setSelectedSegmentId] = React.useState<string>("south-east");
+  const [measuredUsableArea, setMeasuredUsableArea] = React.useState(61.7);
+  const [measuredCapacityKw, setMeasuredCapacityKw] = React.useState(4.8);
+
+  const handleMeasurementsChange = React.useCallback((usableArea: number, capacityKw: number) => {
+    setMeasuredUsableArea(usableArea);
+    setMeasuredCapacityKw(capacityKw);
+  }, []);
 
   const activeSegment = ROOF_SEGMENTS.find((s) => s.id === selectedSegmentId) || ROOF_SEGMENTS[0];
 
@@ -153,20 +161,20 @@ export function ResultsView({
             {/* Metric 1: Usable Area */}
             <div className="flex flex-col">
               <span className="text-4xl sm:text-5xl font-bold font-sans text-graphite-950 tracking-tight">
-                61.7 <span className="text-xl sm:text-2xl font-normal text-graphite-500 font-mono">m²</span>
+                {measuredUsableArea} <span className="text-xl sm:text-2xl font-normal text-graphite-500 font-mono">m²</span>
               </span>
               <span className="text-xs font-mono text-graphite-500 uppercase tracking-wider font-semibold mt-1">
-                Usable roof area
+                Measured Usable Area
               </span>
             </div>
 
             {/* Metric 2: Recommended Capacity */}
             <div className="flex flex-col border-l border-graphite-200 pl-6">
               <span className="text-4xl sm:text-5xl font-bold font-sans text-solar-600 tracking-tight">
-                4.8 <span className="text-xl sm:text-2xl font-normal text-solar-500 font-mono">kW</span>
+                {measuredCapacityKw} <span className="text-xl sm:text-2xl font-normal text-solar-500 font-mono">kW</span>
               </span>
               <span className="text-xs font-mono text-graphite-500 uppercase tracking-wider font-semibold mt-1">
-                Recommended capacity
+                Measured Capacity
               </span>
             </div>
 
@@ -234,16 +242,26 @@ export function ResultsView({
       </div>
 
       {/* ========================================================
-          3D ROOF ANALYSIS VIEWPORT & INSPECTOR OVERLAY
+          STEP 2: REAL ROOFTOP SCANNER & SOLAR HEATMAP
+         ======================================================== */}
+      <RooftopSatelliteScanner
+        latitude={geocodedLocation?.latitude || 37.4419}
+        longitude={geocodedLocation?.longitude || -122.1430}
+        address={geocodedLocation?.displayName || address}
+        onMeasurementsChange={handleMeasurementsChange}
+      />
+
+      {/* ========================================================
+          STEP 3: 3D CADASTRE & PITCH SEGMENTATION
          ======================================================== */}
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
           <div>
             <span className="text-xs font-mono uppercase tracking-widest text-graphite-500 block mb-1">
-              INTERACTIVE 3D CADASTRE
+              STEP 3 — 3D CADASTRE & PITCH INSPECTOR
             </span>
             <h2 className="text-2xl font-bold font-sans text-graphite-950">
-              3D Roof Analysis
+              3D Roof Pitch Analysis
             </h2>
           </div>
 
@@ -467,7 +485,7 @@ export function ResultsView({
       <SolarEconomicsSection
         initialMonthlyBill={monthlyBill}
         currency={currency}
-        initialRoofSpaceSqM={61.7}
+        initialRoofSpaceSqM={measuredUsableArea}
         solarResourceData={solarResourceData}
       />
 
@@ -479,18 +497,21 @@ export function ResultsView({
           address: geocodedLocation?.displayName || address,
           suitabilityScore: 96,
           suitabilityLabel: "Highly Suitable",
-          roofAreaSqM: 84.5,
-          usableAreaSqM: 61.7,
+          roofAreaSqM: Math.round((measuredUsableArea / 0.72) * 10) / 10,
+          usableAreaSqM: measuredUsableArea,
           orientation: "South-East 135°",
-          shading: "Low (0% Obstruction)",
+          shading: "Low (Obstacles Masked)",
           solarExposurePercent: 94,
-          recommendedCapacityKw: 4.8,
-          annualGenerationKwh: Math.round(4.8 * (solarResourceData?.specificYieldKwhPerKw || 1400)),
-          installationCostInr: 200000,
-          subsidyInr: 78000,
-          annualSavingsInr: Math.round(4.8 * (solarResourceData?.specificYieldKwhPerKw || 1400) * 6.5),
+          recommendedCapacityKw: measuredCapacityKw,
+          annualGenerationKwh: Math.round(measuredCapacityKw * (solarResourceData?.specificYieldKwhPerKw || 1400)),
+          installationCostInr: Math.round(measuredCapacityKw * 41666),
+          subsidyInr: Math.min(78000, Math.round(measuredCapacityKw * 18000)),
+          annualSavingsInr: Math.round(measuredCapacityKw * (solarResourceData?.specificYieldKwhPerKw || 1400) * 6.5),
           paybackYears: Number(
-            (122000 / (4.8 * (solarResourceData?.specificYieldKwhPerKw || 1400) * 6.5)).toFixed(1)
+            (
+              (measuredCapacityKw * 41666 - Math.min(78000, measuredCapacityKw * 18000)) /
+              (measuredCapacityKw * (solarResourceData?.specificYieldKwhPerKw || 1400) * 6.5)
+            ).toFixed(1)
           ),
         }}
       />
