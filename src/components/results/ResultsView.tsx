@@ -9,34 +9,17 @@ import {
   ShieldCheck,
   CheckCircle2,
   AlertCircle,
-  XCircle,
   Sparkles,
   Info,
   Layers,
   ArrowUpRight,
   Eye,
-  SlidersHorizontal,
-  ChevronRight,
-  Activity
+  SlidersHorizontal
 } from "lucide-react";
-import dynamic from "next/dynamic";
-import { ROOF_SEGMENTS, RoofSegmentData } from "./roofSegmentsData";
 import { SolarEconomicsSection, SolarResourceData } from "@/components/economics/SolarEconomicsSection";
 import { AiRoofAssessmentSection } from "@/components/ai/AiRoofAssessmentSection";
 import { PropertyLocationMap } from "@/components/map/PropertyLocationMap";
 import { RooftopSatelliteScanner } from "@/components/scanner/RooftopSatelliteScanner";
-
-const RoofScene = dynamic(
-  () => import("@/components/hero/RoofScene").then((mod) => mod.RoofScene),
-  {
-    loading: () => (
-      <div className="w-full h-full min-h-[480px] bg-graphite-950 flex items-center justify-center text-graphite-400 font-mono text-xs">
-        Loading 3D Roof Segmentation...
-      </div>
-    ),
-    ssr: false,
-  }
-);
 
 export interface GeocodedLocation {
   displayName: string;
@@ -65,7 +48,6 @@ export function ResultsView({
   monthlyBill,
   currency,
 }: ResultsViewProps) {
-  const [selectedSegmentId, setSelectedSegmentId] = React.useState<string>("south-east");
   const [measuredUsableArea, setMeasuredUsableArea] = React.useState(61.7);
   const [measuredCapacityKw, setMeasuredCapacityKw] = React.useState(4.8);
 
@@ -73,30 +55,6 @@ export function ResultsView({
     setMeasuredUsableArea(usableArea);
     setMeasuredCapacityKw(capacityKw);
   }, []);
-
-  const activeSegment = ROOF_SEGMENTS.find((s) => s.id === selectedSegmentId) || ROOF_SEGMENTS[0];
-
-  // Map 3D Annotations based on active selected segment or overall overview
-  const annotationsFor3D = [
-    {
-      id: "se-segment",
-      position: [-1.2, 4.8, 1.8] as [number, number, number],
-      label: "South-East Pitch",
-      value: "32.4 m² (Rec.)",
-    },
-    {
-      id: "west-segment",
-      position: [3.8, 4.5, -1.2] as [number, number, number],
-      label: "West Pitch",
-      value: "18.2 m² (Opt.)",
-    },
-    {
-      id: "north-segment",
-      position: [-3.8, 4.2, -1.8] as [number, number, number],
-      label: "North Pitch",
-      value: "11.1 m² (Low)",
-    },
-  ];
 
   return (
     <div className="w-full max-w-7xl mx-auto px-6 sm:px-8 py-8 space-y-16">
@@ -117,8 +75,8 @@ export function ResultsView({
               <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <span className="text-xs font-mono uppercase tracking-widest text-cyan-700 font-semibold">
                   {geocodedLocation
-                    ? `COORDINATES: ${geocodedLocation.latitude.toFixed(4)}° N, ${geocodedLocation.longitude.toFixed(4)}° W`
-                    : "GEOSPATIAL AUDIT #8492-B"}
+                    ? `COORDINATES: ${geocodedLocation.latitude.toFixed(4)}° N, ${geocodedLocation.longitude.toFixed(4)}° E`
+                    : "GEOSPATIAL AUDIT"}
                 </span>
                 <span className="text-graphite-300">•</span>
                 <span className="text-xs font-mono text-graphite-600 line-clamp-1 max-w-xl">
@@ -127,7 +85,7 @@ export function ResultsView({
               </div>
 
               <h1 className="text-3xl sm:text-4xl font-bold font-sans tracking-tight text-graphite-950">
-                Your Roof Assessment
+                Your Roof Solar Assessment
               </h1>
             </div>
 
@@ -149,7 +107,7 @@ export function ResultsView({
               <div className="inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-emerald-500/10 border border-emerald-500/40 text-emerald-900 shadow-sm shrink-0">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
                 <span className="text-xs font-mono font-bold tracking-widest uppercase">
-                  GOOD SOLAR POTENTIAL
+                  HIGH SOLAR POTENTIAL
                 </span>
               </div>
             </div>
@@ -181,10 +139,10 @@ export function ResultsView({
             {/* Metric 3: Solar Exposure */}
             <div className="flex flex-col border-l border-graphite-200 pl-6">
               <span className="text-4xl sm:text-5xl font-bold font-sans text-emerald-700 tracking-tight">
-                High
+                94%
               </span>
               <span className="text-xs font-mono text-graphite-500 uppercase tracking-wider font-semibold mt-1">
-                Solar exposure (94%)
+                Annual Sun Exposure
               </span>
             </div>
 
@@ -194,7 +152,7 @@ export function ResultsView({
                 Low
               </span>
               <span className="text-xs font-mono text-graphite-500 uppercase tracking-wider font-semibold mt-1">
-                Shading obstruction
+                Obstacles Deducted
               </span>
             </div>
 
@@ -204,7 +162,7 @@ export function ResultsView({
                 South-East
               </span>
               <span className="text-xs font-mono text-graphite-500 uppercase tracking-wider font-semibold mt-1">
-                Primary orientation (135°)
+                Optimal Pitch (135°)
               </span>
             </div>
 
@@ -214,13 +172,13 @@ export function ResultsView({
       </div>
 
       {/* ========================================================
-          LOCATION SECTION: INTERACTIVE GEOSPATIAL PROPERTY MAP
+          STEP 1: LOCATION & GEOSPATIAL PROPERTY MAP
          ======================================================== */}
       <div className="space-y-4">
         <div className="flex items-center justify-between px-2">
           <div>
             <span className="text-xs font-mono uppercase tracking-widest text-cyan-700 font-semibold block mb-1">
-              STEP 1 — LOCATION & GEOSPATIAL CONTEXT
+              STEP 1 — LOCATION CONTEXT
             </span>
             <h2 className="text-2xl font-bold font-sans text-graphite-950">
               Interactive Property Location Map
@@ -252,245 +210,7 @@ export function ResultsView({
       />
 
       {/* ========================================================
-          STEP 3: 3D CADASTRE & PITCH SEGMENTATION
-         ======================================================== */}
-      <div className="space-y-4">
-        <div className="flex items-center justify-between px-2">
-          <div>
-            <span className="text-xs font-mono uppercase tracking-widest text-graphite-500 block mb-1">
-              STEP 3 — 3D CADASTRE & PITCH INSPECTOR
-            </span>
-            <h2 className="text-2xl font-bold font-sans text-graphite-950">
-              3D Roof Pitch Analysis
-            </h2>
-          </div>
-
-          <div className="flex items-center gap-2 text-xs font-mono text-graphite-600 bg-white border border-graphite-200 rounded-lg px-3 py-1.5 shadow-xs">
-            <Eye className="w-3.5 h-3.5 text-solar-500" />
-            <span>Hover/Click roof sections to inspect segment properties</span>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-stretch">
-          
-          {/* 3D Roof Viewport */}
-          <div className="lg:col-span-8 rounded-2xl border border-graphite-200 bg-white overflow-hidden shadow-xl min-h-[480px] lg:min-h-[540px] relative">
-            
-            {/* Viewport Header */}
-            <div className="px-5 py-3 bg-graphite-50 hairline-b flex items-center justify-between text-xs font-mono text-graphite-600 z-10 relative">
-              <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
-                <span className="font-semibold text-graphite-900">SEGMENT INSPECTOR</span>
-                <span className="text-graphite-400">|</span>
-                <span>Active: {activeSegment.name} Pitch</span>
-              </div>
-              <span className="px-2 py-0.5 rounded bg-solar-100 text-solar-900 font-semibold">
-                {activeSegment.area} Usable
-              </span>
-            </div>
-
-            {/* 3D Scene */}
-            <RoofScene annotations={annotationsFor3D} />
-
-            {/* Hover Inspector Card Overlay */}
-            <div className="absolute bottom-6 right-6 z-20 max-w-xs w-full bg-graphite-950/90 backdrop-blur-md text-white p-5 rounded-xl border border-graphite-800 shadow-2xl space-y-3">
-              <div className="flex items-center justify-between border-b border-graphite-800 pb-2">
-                <div className="flex items-center gap-2">
-                  <Compass className="w-4 h-4 text-solar-400" />
-                  <span className="font-bold text-sm font-sans">{activeSegment.name} Pitch</span>
-                </div>
-                <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${activeSegment.statusBadge}`}>
-                  {activeSegment.status}
-                </span>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 text-xs font-mono">
-                <div>
-                  <span className="block text-graphite-400 text-[10px]">AREA</span>
-                  <span className="font-bold text-white text-sm">{activeSegment.area}</span>
-                </div>
-                <div>
-                  <span className="block text-graphite-400 text-[10px]">ORIENTATION</span>
-                  <span className="font-bold text-white text-sm">{activeSegment.orientation}</span>
-                </div>
-                <div>
-                  <span className="block text-graphite-400 text-[10px]">EXPOSURE</span>
-                  <span className="font-bold text-emerald-400 text-sm">{activeSegment.exposure}</span>
-                </div>
-                <div>
-                  <span className="block text-graphite-400 text-[10px]">SHADING</span>
-                  <span className="font-bold text-white text-sm">{activeSegment.shading}</span>
-                </div>
-              </div>
-
-              <p className="text-[11px] font-sans text-graphite-300 leading-tight pt-1">
-                {activeSegment.notes}
-              </p>
-            </div>
-
-          </div>
-
-          {/* Right Inspection Controls / Segment Picker */}
-          <div className="lg:col-span-4 flex flex-col justify-between space-y-4">
-            <div className="architectural-card rounded-2xl p-6 border border-graphite-200 space-y-4 h-full flex flex-col justify-between">
-              <div>
-                <div className="flex items-center gap-2 text-xs font-mono text-graphite-500 uppercase tracking-wider mb-4 font-semibold">
-                  <Layers className="w-4 h-4 text-solar-500" />
-                  <span>Select Roof Segment</span>
-                </div>
-
-                <div className="space-y-3">
-                  {ROOF_SEGMENTS.map((seg) => {
-                    const isSelected = seg.id === selectedSegmentId;
-                    return (
-                      <button
-                        key={seg.id}
-                        onClick={() => setSelectedSegmentId(seg.id)}
-                        className={`w-full text-left p-4 rounded-xl border transition-all ${
-                          isSelected
-                            ? "bg-graphite-950 text-white border-graphite-950 shadow-md scale-[1.02]"
-                            : "bg-white text-graphite-900 border-graphite-200 hover:border-solar-400"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="font-bold font-sans text-sm">{seg.name} Pitch</span>
-                          <span
-                            className={`text-[10px] font-mono px-2 py-0.5 rounded ${
-                              isSelected
-                                ? "bg-solar-500 text-graphite-950 font-bold"
-                                : seg.statusBadge
-                            }`}
-                          >
-                            {seg.status}
-                          </span>
-                        </div>
-
-                        <div className="flex items-center justify-between text-xs font-mono opacity-90 mt-2">
-                          <span>{seg.area}</span>
-                          <span>{seg.exposure}</span>
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="pt-4 hairline-t text-xs font-mono text-graphite-500 flex items-center justify-between">
-                <span>Total Segment Facets: 3</span>
-                <span className="text-solar-600 font-semibold">61.7 m² Active Surface</span>
-              </div>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* ========================================================
-          ROOF BREAKDOWN SECTION
-         ======================================================== */}
-      <div className="space-y-6 pt-4">
-        
-        {/* Section Title */}
-        <div className="pb-4 hairline-b flex flex-col md:flex-row md:items-end justify-between">
-          <div>
-            <span className="text-xs font-mono uppercase tracking-widest text-graphite-500 block mb-1">
-              SEGMENTATION CLASSIFICATION
-            </span>
-            <h2 className="text-2xl sm:text-3xl font-bold font-sans text-graphite-950">
-              Roof Breakdown
-            </h2>
-          </div>
-          <p className="text-xs font-sans text-graphite-600 max-w-md mt-2 md:mt-0">
-            Facets categorized by annual solar irradiance yield and panel layout suitability.
-          </p>
-        </div>
-
-        {/* 3 Segment Breakdown Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {ROOF_SEGMENTS.map((segment) => {
-            const isSelected = segment.id === selectedSegmentId;
-
-            return (
-              <div
-                key={segment.id}
-                onClick={() => setSelectedSegmentId(segment.id)}
-                className={`architectural-card rounded-2xl p-7 border transition-all cursor-pointer ${
-                  isSelected
-                    ? "border-solar-500 shadow-xl bg-solar-50/20 ring-1 ring-solar-500/30"
-                    : "border-graphite-200 hover:border-graphite-400 shadow-sm"
-                }`}
-              >
-                {/* Header */}
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2">
-                    <div
-                      className={`w-3 h-3 rounded-full ${
-                        segment.status === "Recommended"
-                          ? "bg-emerald-500"
-                          : segment.status === "Optional"
-                          ? "bg-solar-500"
-                          : "bg-graphite-400"
-                      }`}
-                    />
-                    <h3 className="text-xl font-bold font-sans text-graphite-950">
-                      {segment.name}
-                    </h3>
-                  </div>
-
-                  <span className={`text-[10px] font-mono px-2.5 py-1 rounded border ${segment.statusBadge}`}>
-                    {segment.status}
-                  </span>
-                </div>
-
-                {/* Area Prominent Display */}
-                <div className="mb-6">
-                  <span className="text-3xl font-bold font-sans text-graphite-950">
-                    {segment.area}
-                  </span>
-                  <span className="block text-xs font-mono text-graphite-500 uppercase mt-0.5">
-                    Segment Area
-                  </span>
-                </div>
-
-                {/* Property Detail Pills */}
-                <div className="space-y-2.5 pt-4 hairline-t text-xs font-mono">
-                  <div className="flex justify-between">
-                    <span className="text-graphite-500">Solar Exposure:</span>
-                    <span className="font-bold text-graphite-900">{segment.exposure}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-graphite-500">Shading Level:</span>
-                    <span className="font-semibold text-graphite-900">{segment.shading}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-graphite-500">Panel Capacity:</span>
-                    <span className="font-bold text-solar-600">{segment.panelCount} Panels</span>
-                  </div>
-                </div>
-
-                {/* Notes */}
-                <p className="text-xs font-sans text-graphite-600 mt-5 pt-4 hairline-t leading-relaxed">
-                  {segment.notes}
-                </p>
-              </div>
-            );
-          })}
-        </div>
-
-      </div>
-
-      {/* ========================================================
-          SOLAR ECONOMICS SECTION: WILL SOLAR PAY OFF?
-         ======================================================== */}
-      <SolarEconomicsSection
-        initialMonthlyBill={monthlyBill}
-        currency={currency}
-        initialRoofSpaceSqM={measuredUsableArea}
-        solarResourceData={solarResourceData}
-      />
-
-      {/* ========================================================
-          AI ROOF ASSESSMENT REPORT SECTION
+          STEP 3: EXECUTIVE FEASIBILITY VERDICT & AI AUDIT
          ======================================================== */}
       <AiRoofAssessmentSection
         payload={{
@@ -514,6 +234,16 @@ export function ResultsView({
             ).toFixed(1)
           ),
         }}
+      />
+
+      {/* ========================================================
+          STEP 4: SOLAR ECONOMICS & PAYOFF (AUTO-CALCULATED)
+         ======================================================== */}
+      <SolarEconomicsSection
+        initialMonthlyBill={monthlyBill}
+        currency={currency}
+        initialRoofSpaceSqM={measuredUsableArea}
+        solarResourceData={solarResourceData}
       />
 
     </div>

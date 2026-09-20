@@ -7,15 +7,17 @@ import {
   generateLocalAiReport
 } from "@/lib/ai/aiAssessmentEngine";
 import {
-  Sparkles,
-  Compass,
-  DollarSign,
-  CheckSquare,
-  Award,
+  CheckCircle2,
   AlertTriangle,
   RefreshCw,
   Cpu,
-  FileText
+  FileText,
+  ArrowRight,
+  ShieldCheck,
+  Zap,
+  MapPin,
+  Calendar,
+  AlertCircle
 } from "lucide-react";
 
 interface AiRoofAssessmentSectionProps {
@@ -34,7 +36,7 @@ export function AiRoofAssessmentSection({ payload }: AiRoofAssessmentSectionProp
       roofAreaSqM: payload?.roofAreaSqM ?? 84.5,
       usableAreaSqM: payload?.usableAreaSqM ?? 61.7,
       orientation: payload?.orientation || "South-East 135°",
-      shading: payload?.shading || "Low (0% Obstruction)",
+      shading: payload?.shading || "Low (Obstacles Deducted)",
       solarExposurePercent: payload?.solarExposurePercent ?? 94,
       recommendedCapacityKw: payload?.recommendedCapacityKw ?? 4.8,
       annualGenerationKwh: payload?.annualGenerationKwh ?? 6720,
@@ -81,18 +83,19 @@ export function AiRoofAssessmentSection({ payload }: AiRoofAssessmentSectionProp
   }, [fullPayload]);
 
   const activeReport = report || generateLocalAiReport(fullPayload);
+  const verdict = activeReport.siteVisitVerdict;
 
   return (
-    <section className="space-y-6 pt-6">
+    <section className="space-y-6 pt-4">
       
       {/* Section Header */}
-      <div className="pb-4 hairline-b flex flex-col sm:flex-row sm:items-end justify-between gap-2">
+      <div className="pb-3 hairline-b flex flex-col sm:flex-row sm:items-end justify-between gap-2">
         <div>
-          <span className="text-xs font-mono uppercase tracking-widest text-solar-600 font-semibold block mb-1">
-            INTELLIGENT REPORT EXPLANATION
+          <span className="text-xs font-mono uppercase tracking-widest text-cyan-700 font-semibold block mb-1">
+            EXECUTIVE AUDIT SUMMARY
           </span>
           <h2 className="text-2xl sm:text-3xl font-bold font-sans text-graphite-950 tracking-tight">
-            AI Roof Assessment
+            AI Feasibility Verdict
           </h2>
         </div>
 
@@ -100,119 +103,106 @@ export function AiRoofAssessmentSection({ payload }: AiRoofAssessmentSectionProp
           <Cpu className="w-3.5 h-3.5 text-solar-400" />
           <span>
             {activeReport.isFallback
-              ? "Deterministic Assessment Report (Local)"
-              : "AI Satellite Report Model"}
+              ? "Deterministic Pre-Audit Engine"
+              : "Gemini / AI Verified"}
           </span>
         </div>
       </div>
 
-      {/* Main Structured Report Card */}
-      <div className="architectural-card rounded-2xl p-8 sm:p-10 border border-graphite-200 bg-white shadow-xl space-y-8 relative">
+      {/* Main Report Card */}
+      <div className="architectural-card rounded-2xl p-6 sm:p-8 border border-graphite-200 bg-white shadow-xl space-y-6 relative">
         
-        {/* Loading Overlay Ticker */}
         {loading && (
           <div className="absolute top-4 right-4 z-10 flex items-center gap-2 px-3 py-1 rounded-full bg-solar-100 text-solar-900 text-xs font-mono">
             <RefreshCw className="w-3.5 h-3.5 animate-spin text-solar-600" />
-            <span>Generating Intelligent Explanation...</span>
+            <span>Analyzing...</span>
           </div>
         )}
 
-        {/* Report Subheader */}
-        <div className="flex items-center gap-3 pb-6 hairline-b">
-          <div className="w-10 h-10 rounded-lg bg-graphite-950 flex items-center justify-center text-solar-400 shrink-0">
-            <FileText className="w-5 h-5" />
+        {/* 1. PHYSICAL SITE VISIT VERDICT CARD (HIGH VISIBILITY) */}
+        <div className={`rounded-xl p-5 border ${
+          verdict.status === "DIRECT_FEASIBLE"
+            ? "bg-emerald-50/80 border-emerald-300 text-emerald-950"
+            : verdict.status === "VISIT_RECOMMENDED"
+            ? "bg-amber-50/80 border-amber-300 text-amber-950"
+            : "bg-red-50/80 border-red-300 text-red-950"
+        }`}>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-black/10">
+            <div className="flex items-center gap-2.5">
+              {verdict.status === "DIRECT_FEASIBLE" ? (
+                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              ) : verdict.status === "VISIT_RECOMMENDED" ? (
+                <AlertTriangle className="w-5 h-5 text-amber-600 shrink-0" />
+              ) : (
+                <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+              )}
+              <h3 className="font-bold font-sans text-base sm:text-lg">
+                {verdict.title}
+              </h3>
+            </div>
+
+            <span className={`text-[11px] font-mono px-3 py-1 rounded-full font-bold self-start sm:self-auto border ${verdict.badgeClass}`}>
+              {verdict.status === "DIRECT_FEASIBLE"
+                ? "LOW RISK • READY TO BID"
+                : verdict.status === "VISIT_RECOMMENDED"
+                ? "SURVEY RECOMMENDED"
+                : "SITE SURVEY MANDATORY"}
+            </span>
           </div>
-          <div>
-            <h3 className="text-lg font-bold font-sans text-graphite-950">
-              Technical Audit Brief — {fullPayload.address}
-            </h3>
-            <p className="text-xs font-mono text-graphite-500">
-              Source of truth: Suryascope Deterministic Cadastral Engine
-            </p>
+
+          <p className="text-xs sm:text-sm font-sans mt-3 leading-relaxed opacity-90">
+            {verdict.summary}
+          </p>
+
+          <ul className="mt-3 space-y-1 text-xs font-mono opacity-80 list-disc list-inside">
+            {verdict.reasons.map((r, i) => (
+              <li key={i}>{r}</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* 2. EXECUTIVE SUMMARY BRIEF */}
+        <div className="p-4 rounded-xl bg-graphite-50 border border-graphite-200 text-xs sm:text-sm font-sans text-graphite-800 leading-relaxed">
+          <strong className="text-graphite-950 font-semibold font-mono uppercase text-xs block mb-1">
+            Executive Summary:
+          </strong>
+          {activeReport.executiveSummary}
+        </div>
+
+        {/* 3. 4 KEY METRIC TAKEAWAYS (CLEAN CARDS) */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {activeReport.keyFindings.map((kf, i) => (
+            <div key={i} className="p-4 rounded-xl bg-white border border-graphite-200 shadow-2xs space-y-1">
+              <span className="text-[10px] font-mono uppercase text-graphite-500 font-semibold block">
+                {kf.label}
+              </span>
+              <span className="text-xl sm:text-2xl font-bold font-sans text-graphite-950 block">
+                {kf.value}
+              </span>
+              <span className="text-[11px] text-graphite-600 font-sans block line-clamp-2 leading-tight">
+                {kf.subtext}
+              </span>
+            </div>
+          ))}
+        </div>
+
+        {/* 4. CLEAR ACTION STEPS (NO THEORY) */}
+        <div className="pt-2">
+          <span className="text-xs font-mono font-bold uppercase tracking-wider text-graphite-700 block mb-3">
+            Recommended Action Steps
+          </span>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {activeReport.actionSteps.map((step, idx) => (
+              <div key={idx} className="p-3.5 rounded-xl border border-graphite-200 bg-graphite-50/50 flex items-start gap-2.5 text-xs font-sans text-graphite-700">
+                <span className="w-5 h-5 rounded-full bg-solar-500 text-graphite-950 font-mono font-bold text-[10px] flex items-center justify-center shrink-0 mt-0.5">
+                  {idx + 1}
+                </span>
+                <p className="leading-snug">{step}</p>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* 4 Structured Report Sections Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          
-          {/* Section 1: WHY THIS ROOF SCORED THIS WAY */}
-          <div className="architectural-card rounded-xl p-6 border border-graphite-200 bg-graphite-50/60 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-solar-900 mb-3">
-                <Award className="w-4 h-4 text-solar-600" />
-                <span>WHY THIS ROOF SCORED THIS WAY</span>
-              </div>
-              <p className="text-xs font-sans text-graphite-700 leading-relaxed">
-                {activeReport.whyItScored}
-              </p>
-            </div>
-            <div className="pt-4 mt-4 hairline-t text-[11px] font-mono text-graphite-500 flex justify-between">
-              <span>Suitability Index:</span>
-              <span className="font-bold text-graphite-900">{fullPayload.suitabilityScore}/100</span>
-            </div>
-          </div>
-
-          {/* Section 2: BEST ROOF SECTION */}
-          <div className="architectural-card rounded-xl p-6 border border-graphite-200 bg-graphite-50/60 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-emerald-900 mb-3">
-                <Compass className="w-4 h-4 text-emerald-600" />
-                <span>BEST ROOF SECTION</span>
-              </div>
-              <p className="text-xs font-sans text-graphite-700 leading-relaxed">
-                {activeReport.bestRoofSection}
-              </p>
-            </div>
-            <div className="pt-4 mt-4 hairline-t text-[11px] font-mono text-graphite-500 flex justify-between">
-              <span>Optimal Surface:</span>
-              <span className="font-bold text-emerald-700">{fullPayload.usableAreaSqM} m² ({fullPayload.orientation})</span>
-            </div>
-          </div>
-
-          {/* Section 3: FINANCIAL SUMMARY */}
-          <div className="architectural-card rounded-xl p-6 border border-graphite-200 bg-graphite-50/60 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-solar-900 mb-3">
-                <DollarSign className="w-4 h-4 text-solar-600" />
-                <span>FINANCIAL SUMMARY</span>
-              </div>
-              <p className="text-xs font-sans text-graphite-700 leading-relaxed">
-                {activeReport.financialSummary}
-              </p>
-            </div>
-            <div className="pt-4 mt-4 hairline-t text-[11px] font-mono text-graphite-500 flex justify-between">
-              <span>Estimated Payback:</span>
-              <span className="font-bold text-solar-600">{fullPayload.paybackYears} Years</span>
-            </div>
-          </div>
-
-          {/* Section 4: WHAT TO DO NEXT */}
-          <div className="architectural-card rounded-xl p-6 border border-graphite-200 bg-graphite-50/60 flex flex-col justify-between">
-            <div>
-              <div className="flex items-center gap-2 text-xs font-mono font-bold uppercase tracking-wider text-graphite-900 mb-3">
-                <CheckSquare className="w-4 h-4 text-graphite-800" />
-                <span>WHAT TO DO NEXT</span>
-              </div>
-              <div className="text-xs font-sans text-graphite-700 leading-relaxed whitespace-pre-line">
-                {activeReport.whatToDoNext}
-              </div>
-            </div>
-            <div className="pt-4 mt-4 hairline-t text-[11px] font-mono text-graphite-500 flex justify-between">
-              <span>Action:</span>
-              <span className="font-bold text-graphite-900">Physical Site Survey Prep</span>
-            </div>
-          </div>
-
-        </div>
-
-      </div>
-
-      {/* Mandatory Technical Disclaimer */}
-      <div className="p-4 rounded-xl bg-solar-50 border border-solar-200 flex items-start gap-3 text-xs font-sans text-solar-900">
-        <AlertTriangle className="w-4 h-4 text-solar-600 shrink-0 mt-0.5" />
-        <p className="leading-relaxed">
-          <strong>Mandatory Notice:</strong> This is a preliminary satellite-based assessment. A physical site survey is required before installation.
-        </p>
       </div>
 
     </section>

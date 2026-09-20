@@ -15,22 +15,54 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, suggestions: [] });
     }
 
-    const searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
-      query.trim()
-    )}&format=json&limit=5&addressdetails=0`;
+    const cleanQuery = query.trim();
 
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
+    // 1. Try Photon Komoot (fast, fuzzy, street-level)
+    try {
+      const photonUrl = `https://photon.komoot.io/api/?q=${encodeURIComponent(cleanQuery)}&limit=5`;
+      const res = await fetch(photonUrl, {
+        headers: { "User-Agent": "SuryaScope-SolarApp/1.0" },
+        signal: AbortSignal.timeout(2500),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        const features = data?.features;
+        if (Array.isArray(features) && features.length > 0) {
+          const suggestions: LocationSuggestion[] = features
+            .map((f: any) => {
+              const coords = f?.geometry?.coordinates;
+              const p = f?.properties || {};
+              const parts = [p.name, p.street, p.district, p.city || p.county, p.state, p.country].filter(Boolean);
+              return {
+                displayName: parts.length > 0 ? parts.join(", ") : cleanQuery,
+                latitude: parseFloat(coords[1]),
+                longitude: parseFloat(coords[0]),
+              };
+            })
+            .filter((s) => !isNaN(s.latitude) && !isNaN(s.longitude));
+
+          if (suggestions.length > 0) {
+            return NextResponse.json({ success: true, suggestions });
+          }
+        }
+      }
+    } catch {
+      // Fall through to Nominatim
+    }
+
+    // 2. Secondary fallback: Nominatim
+    const searchUrl = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(
+      cleanQuery
+    )}&format=json&limit=5&addressdetails=0`;
 
     const res = await fetch(searchUrl, {
       headers: {
-        "User-Agent": "Suryascope-PreFeasibility-App/1.0 (contact@suryascope.app)",
+        "User-Agent": "SuryaScope-SolarApp/1.0 (contact@suryascope.org)",
         "Accept-Language": "en-US,en;q=0.9",
       },
-      signal: controller.signal,
+      signal: AbortSignal.timeout(3000),
     });
-
-    clearTimeout(timeoutId);
 
     if (!res.ok) {
       return NextResponse.json({ success: true, suggestions: [] });
@@ -41,11 +73,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ success: true, suggestions: [] });
     }
 
-    const suggestions: LocationSuggestion[] = data.map((item: any) => ({
-      displayName: item.display_name,
-      latitude: parseFloat(item.lat),
-      longitude: parseFloat(item.lon),
-    })).filter((item) => !isNaN(item.latitude) && !isNaN(item.longitude));
+    const suggestions: LocationSuggestion[] = data
+      .map((item: any) => ({
+        displayName: item.display_name,
+        latitude: parseFloat(item.lat),
+        longitude: parseFloat(item.lon),
+      }))
+      .filter((item) => !isNaN(item.latitude) && !isNaN(item.longitude));
 
     return NextResponse.json({ success: true, suggestions });
   } catch (err) {

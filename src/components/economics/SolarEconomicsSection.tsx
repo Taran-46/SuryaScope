@@ -303,62 +303,36 @@ export function SolarEconomicsSection({
             </div>
           </div>
 
-          {/* Slider 2: Available Rooftop Space */}
-          <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <label className="text-xs font-mono uppercase tracking-wider text-graphite-700 font-bold flex items-center gap-1.5">
-                <Compass className="w-4 h-4 text-solar-500" />
-                <span>Available Rooftop Space</span>
-              </label>
-              <div className="flex items-center gap-1 text-sm font-bold font-mono text-graphite-950 bg-graphite-50 px-3 py-1 rounded-lg border border-graphite-200">
-                <input
-                  type="number"
-                  min={10}
-                  max={300}
-                  step={5}
-                  value={roofSpaceSqM}
-                  onChange={(e) => setRoofSpaceSqM(Math.max(10, Number(e.target.value)))}
-                  className="w-16 bg-transparent text-right outline-none font-mono"
-                />
-                <span className="text-graphite-500 text-xs font-normal">m²</span>
-                <span className="text-graphite-400 text-[10px] font-normal hidden sm:inline">
-                  (~{Math.round(roofSpaceSqM * 10.76)} sq ft)
+          {/* Auto-Calculated Rooftop Space (Locked to Scanned Satellite Cadastre) */}
+          <div className="space-y-3 p-4 sm:p-5 rounded-xl bg-emerald-50/70 border border-emerald-200 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between">
+                <label className="text-xs font-mono uppercase tracking-wider text-emerald-950 font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                  <span>Measured Usable Roof Area</span>
+                </label>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-200/80 text-emerald-900 font-bold">
+                  AUTO-CALCULATED
                 </span>
               </div>
+
+              <div className="flex items-baseline gap-2 pt-2">
+                <span className="text-3xl sm:text-4xl font-bold font-sans text-emerald-950">
+                  {roofSpaceSqM}
+                </span>
+                <span className="text-sm font-mono text-emerald-700">
+                  m² (~{Math.round(roofSpaceSqM * 10.76)} sq ft)
+                </span>
+              </div>
+
+              <p className="text-xs font-sans text-emerald-800/90 mt-2 leading-relaxed">
+                Calculated automatically from your physical satellite rooftop scan. Shading zones, water tanks, and parapet setbacks are already deducted.
+              </p>
             </div>
 
-            <input
-              type="range"
-              min={15}
-              max={250}
-              step={5}
-              value={roofSpaceSqM}
-              onChange={(e) => setRoofSpaceSqM(Number(e.target.value))}
-              className="w-full accent-solar-500 cursor-pointer h-2 bg-graphite-200 rounded-lg"
-            />
-
-            {/* Quick Preset Space Buttons */}
-            <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] font-mono text-graphite-500">
-              <span className="text-[10px] text-graphite-400 uppercase">Presets:</span>
-              {[
-                { label: "Compact (30 m²)", val: 30 },
-                { label: "Standard (60 m²)", val: 60 },
-                { label: "Large (110 m²)", val: 110 },
-                { label: "Commercial (200 m²)", val: 200 },
-              ].map((preset) => (
-                <button
-                  key={preset.val}
-                  type="button"
-                  onClick={() => setRoofSpaceSqM(preset.val)}
-                  className={`px-2 py-0.5 rounded border transition-all ${
-                    roofSpaceSqM === preset.val
-                      ? "bg-graphite-950 text-white border-graphite-950 font-bold"
-                      : "bg-white text-graphite-700 border-graphite-200 hover:border-solar-400"
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
+            <div className="pt-2 text-[11px] font-mono text-emerald-700 flex items-center gap-1.5">
+              <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Locked to Cadastre Vision • No manual guesswork</span>
             </div>
           </div>
 
